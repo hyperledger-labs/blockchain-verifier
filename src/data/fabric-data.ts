@@ -6,7 +6,7 @@
 
 import { Integer, OctetString, Sequence } from "asn1js";
 import { createHash } from "crypto";
-import { BlockData, decodeBlock, HeaderType } from "fabric-client/lib/BlockDecoder";
+import { BlockData, decode, decodeBlock, HeaderType } from "fabric-client/lib/BlockDecoder";
 import * as grpc from "grpc";
 import * as path from "path";
 import { format } from "util";
@@ -66,11 +66,14 @@ export enum FabricMetaDataIndex {
     TRANSACTION_FILTER = 2
 }
 
-type FabricBlockConstructorOptions = { encoded: true, data: Buffer };
+type FabricBlockConstructorOptions = { fromFile: boolean, data: Buffer };
 
 export class FabricBlock implements Block {
-    public static fromBytes(bytes: Buffer) {
-        return new FabricBlock({ encoded: true, data: bytes });
+    public static fromFileBytes(bytes: Buffer) {
+        return new FabricBlock({ fromFile: true, data: bytes });
+    }
+    public static fromQueryBytes(bytes: Buffer) {
+        return new FabricBlock({ fromFile: false, data: bytes });
     }
 
     private rawBytes: Buffer;
@@ -80,39 +83,56 @@ export class FabricBlock implements Block {
 
     private constructor(opt: FabricBlockConstructorOptions) {
         this.rawBytes = opt.data;
-        const blockBuf = new VarBuffer(opt.data);
+        if (opt.fromFile) {
+            const blockBuf = new VarBuffer(opt.data);
 
-        // Header
-        const headerNum = blockBuf.readVarInt();
-        const headerHashLen = blockBuf.readVarInt();
-        const headerHash = blockBuf.readBytes(headerHashLen);
-        const headerPrevHashLen = blockBuf.readVarInt();
-        const headerPrevHash = blockBuf.readBytes(headerPrevHashLen);
+            // Header
+            const headerNum = blockBuf.readVarInt();
+            const headerHashLen = blockBuf.readVarInt();
+            const headerHash = blockBuf.readBytes(headerHashLen);
+            const headerPrevHashLen = blockBuf.readVarInt();
+            const headerPrevHash = blockBuf.readBytes(headerPrevHashLen);
 
-        // Data
-        const nData = blockBuf.readVarInt();
-        const data = [];
+            // Data
+            const nData = blockBuf.readVarInt();
+            const data = [];
 
-        for (let i = 0; i < nData; i++) {
-            const dataLen = blockBuf.readVarInt();
-            data.push(blockBuf.readBytes(dataLen));
+            for (let i = 0; i < nData; i++) {
+                const dataLen = blockBuf.readVarInt();
+                data.push(blockBuf.readBytes(dataLen));
+            }
+
+            const nMetadata = blockBuf.readVarInt();
+            const metadata = [];
+            for (let i = 0; i < nMetadata; i++) {
+                const dataLen = blockBuf.readVarInt();
+                metadata.push(blockBuf.readBytes(dataLen));
+            }
+
+            const blockObj = {
+                header : { number : headerNum, previous_hash : headerPrevHash, data_hash : headerHash },
+                data : { data: data },
+                metadata : { metadata: metadata }
+            };
+            this.rawBlock = blockObj;
+
+            this.block = decodeBlock(blockObj);
+        } else {
+            this.block = decode(opt.data);
+
+            const protoBlock = Protos.common.Block.decode(opt.data);
+            const data: Buffer[] = [];
+            for (const dataProto of protoBlock.getData().getData()) {
+                data.push(dataProto.toBuffer());
+            }
+            this.rawBlock = {
+                header : { number: protoBlock.getHeader().getNumber().getLowBitsUnsigned(),
+                           previous_hash: protoBlock.getHeader().getPreviousHash().toBuffer(),
+                           data_hash: protoBlock.getHeader().getDataHash().toBuffer() },
+                data : { data: data },
+                metadata : protoBlock.getMetadata()
+            };
         }
-
-        const nMetadata = blockBuf.readVarInt();
-        const metadata = [];
-        for (let i = 0; i < nMetadata; i++) {
-            const dataLen = blockBuf.readVarInt();
-            metadata.push(blockBuf.readBytes(dataLen));
-        }
-
-        const blockObj = {
-            header : { number : headerNum, previous_hash : headerPrevHash, data_hash : headerHash },
-            data : { data: data },
-            metadata : { metadata: metadata }
-        };
-        this.rawBlock = blockObj;
-
-        this.block = decodeBlock(blockObj);
 
         this.transactions = [];
         let t = 0;

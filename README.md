@@ -32,11 +32,11 @@ Run with `-h` for the full list of the options.
 
 ### Options
 
-| Option        | Description                                                                                       |
-|---------------|---------------------------------------------------------------------------------------------------|
-| `-n (plugin)` | Specify the name of the network plugin to use                                                     |
-| `-c (config)` | Configuration passed to the network plugin. See the description for the network plugin for detail |
-| `-o (file)`   | Save the result JSON in the specified file                                                        |
+| Option        | Description                                                                                        |
+|---------------|----------------------------------------------------------------------------------------------------|
+| `-n (plugin)` | Specify the name of the network plugin to use                                                      |
+| `-c (config)` | Configuration passed to the network plugin. See the description for the network plugins for detail |
+| `-o (file)`   | Save the result JSON in the specified file                                                         |
 
 ### Commands
 
@@ -54,9 +54,10 @@ Runs verification against a Hyperledger Fabric ledger file `/tmp/block/blockfile
 
 ## Network plugins
 
-| Name           | Supported Platform      | Description           | Config value (`-c` option) |
-|----------------|-------------------------|-----------------------|----------------------------|
-| `fabric-block` | Hyperledger Fabric v1.1 | Verify a ledger file  | Path to the ledger file    |
+| Name           | Supported Platform      | Description                         | Config value (`-c` option)    |
+|----------------|-------------------------|-------------------------------------|-------------------------------|
+| `fabric-block` | Hyperledger Fabric v1.1 | Verify a ledger file                | Path to the ledger file       |
+| `fabric-query` | Hyperledger Fabric v1.1 | Verify blocks by querying to a peer | Path to the query config file |
 
 ### fabric-block
 
@@ -65,6 +66,48 @@ The file can be usually found in `/var/lib/hyperledger/production/ledgersData/ch
 
 *Limitation:* The ledger may be divided to multiple files when it becomes huge, but the plugin currently
 only supports a single file. You may try to check the divided files by concatenating the ledger files.
+
+### fabric-query
+
+This plugin checks blocks by obtaining them using `query` method to a peer.
+
+The configuration value for the plugin should be the file name to the configuration JSON.
+The format for the JSON is as follows:
+
+| Key name                       | Type    | Description                                                   |
+|--------------------------------|---------|---------------------------------------------------------------|
+| `connectionProfile`            | string  | path to the connection profile                                |
+| `useDiscovery`                 | boolean | whether to use the service discovery                          |
+| `client.mspID`                 | string  | MSP ID for the Hyperledger Fabric client                      |
+| `client.peerName`              | string  | peer name to query                                            |
+| `client.channelName`           | string  | channel name                                                  |
+| `client.credentials.useAdmin`  | boolean | whether to use the admin credentials described in the profile |
+| `client.credentials.mutualTLS` | boolean | whether to use mutual TLS                                     |
+| `client.credentials.userName`  | string  | user name (not so meaningful)                                 |
+| `client.credentials.certFile`  | string  | path to signed certificate to use for the client              |
+| `client.credentials.keyFile`   | string  | path to private key to use for the client                     |
+
+Example:
+
+```
+{
+  "connectionProfile": "profile.yaml",
+  "useDiscovery": true,
+  "client": {
+    "mspID": "Org1MSP",
+    "peerName": "peer0.org1.example.com",
+    "channelName": "mychannel",
+    "credentials": {
+      "useAdmin": false,
+      "mutualTLS": false,
+      "userName": "user",
+      "certFile": "credentials/User1@org1.example.com-cert.pem",
+      "keyFile": "credentials/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk"
+    }
+  }
+}
+
+```
 
 ## Result JSON
 
@@ -133,7 +176,6 @@ The results for these checks are all "OK," which means that the integrity of the
 - Unit tests and integration tests
 - Support for more plugins and platforms
   - Multiple ledger files for Hyperledger Fabric
-  - Querying the blocks from Hyperledger Fabric peers via network
 
 ## License
 

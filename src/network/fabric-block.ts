@@ -80,7 +80,7 @@ export class FabricBlockSource implements BlockSource {
             read(this.file, buffer, 0, bi.size, bi.offset,
                 (err, bytesRead, bufferRead) => {
                     if (err == null && bytesRead === bi.size) {
-                        resolve(FabricBlock.fromBytes(bufferRead));
+                        resolve(FabricBlock.fromFileBytes(bufferRead));
                     } else {
                         reject(err);
                     }

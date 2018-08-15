@@ -12,7 +12,8 @@ import { ResultSet } from "./result-set";
 type PluginInfo = { pluginName: string, moduleName: string };
 
 const networkPlugins: PluginInfo[] = [
-    { pluginName: "fabric-block", moduleName: "./network/fabric-block" }
+    { pluginName: "fabric-block", moduleName: "./network/fabric-block" },
+    { pluginName: "fabric-query", moduleName: "./network/fabric-query" }
 ];
 const blockVerifiers: PluginInfo[] = [
     { pluginName: "generic-block", moduleName: "./check/block-integrity" },
