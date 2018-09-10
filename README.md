@@ -54,18 +54,48 @@ Runs verification against a Hyperledger Fabric ledger file `/tmp/block/blockfile
 
 ## Network plugins
 
-| Name           | Supported Platform      | Description                         | Config value (`-c` option)    |
-|----------------|-------------------------|-------------------------------------|-------------------------------|
-| `fabric-block` | Hyperledger Fabric v1.1 | Verify a ledger file                | Path to the ledger file       |
-| `fabric-query` | Hyperledger Fabric v1.1 | Verify blocks by querying to a peer | Path to the query config file |
+| Name           | Supported Platform      | Description                         | Config value (`-c` option)             |
+|----------------|-------------------------|-------------------------------------|----------------------------------------|
+| `fabric-block` | Hyperledger Fabric v1.1 | Verify a ledger file and private DB | Path to the ledger file or config JSON |
+| `fabric-query` | Hyperledger Fabric v1.1 | Verify blocks by querying to a peer | Path to the query config file          |
 
 ### fabric-block
 
 This plugin checks a ledger file for a channel in Hyperledger Fabric network.
 The file can be usually found in `/var/lib/hyperledger/production/ledgersData/chains/chains/(channel name)` in a peer.
+It also supports checking of the private data (SideDB) against the ledger if the private data is available.
+
+The configuration is either a path to a ledger file or to a configuration JSON.
+If you want to check private data, use the latter (JSON).
+The format for the JSON is an array of objects (only one object is supported though).
+The keys for the object is as follows:
+
+| Key name                       | Type    | Description                             |
+|--------------------------------|---------|-----------------------------------------|
+| `name`                         | string  | any string name for this ledger source  |
+| `ledgerStore`                  | string  | path to a ledger directory              |
+| `blockFile`                    | string  | path to a ledger file                   |
+| `privateDataStore`             | string  | path to a private DB directory          |
+
+Among the keys, `ledgerStore` or `blockFile` is mandatory.
+The private DB can be found in `/var/lib/hyperledger/production/ledgersData/pvtdataStore` in a default configuration.
+If you want to check private data, please perform check against a *copy* of the directory.
+Otherwise (such as using the directory for a running Fabric peer), the tool might affect the Fabric peer.
+
+Example:
+```
+[
+  {
+    "name": "peer0.org1.example.com",
+    "ledgerStore": "/tmp/peerLedger/ledgersData/chains/chains/mychannel",
+    "privateDataStore": "/tmp/peerLedger/ledgersData/pvtdataStore"
+  }
+]
+```
 
 *Limitation:* The ledger may be divided to multiple files when it becomes huge, but the plugin currently
 only supports a single file. You may try to check the divided files by concatenating the ledger files.
+Even if the directory is specified with the JSON, the plugin uses only the first file(`blockfile_000000`).
 
 ### fabric-query
 

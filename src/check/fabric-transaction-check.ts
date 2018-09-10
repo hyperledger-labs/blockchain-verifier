@@ -5,8 +5,11 @@
  */
 
 import { MSPConfig } from "fabric-client/lib/BlockDecoder";
+import { format } from "util";
+
 import { BCVerifierError, CheckResult, ResultPredicate, TransactionCheckPlugin } from "../common";
-import { FabricBlock, FabricMetaDataIndex, FabricTransaction } from "../data/fabric-data";
+import { FabricAction, FabricBlock, FabricMetaDataIndex, FabricPrivateRWSet,
+         FabricTransaction } from "../data/fabric-data";
 import { getApplicationMSPs, getOrdererMSPs, verifyIdentityMSP, verifySignature,
          verifySignatureHeader } from "../data/fabric-utils";
 import { BlockProvider } from "../provider";
@@ -146,6 +149,78 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
                     { name: action + ".Response + " + endorsementStr + ".Endorser",
                       value: transaction.getPayloadBytes() },
                     { name: endorsementStr + ".Endorser", value: transaction.header.signature_header.creator }
+                );
+            }
+
+            // Check Private Data
+            const rwSets = action.getRWSets();
+            for (const i in rwSets) {
+                const rwSet = rwSets[i];
+
+                if (rwSet.private_rwset != null && rwSet.private_rwset.length > 0) {
+                    this.checkPrivateData(action, parseInt(i, 10), rwSet);
+                }
+            }
+        }
+    }
+
+    private checkPrivateData(action: FabricAction, index: number, rwSet: any) {
+        for (const i in rwSet.collection_hashed_rwset) {
+            if (rwSet.private_rwset[i] == null) {
+                // No data in the private DB. Ignore.
+                continue;
+            }
+            const hashedRWSet = rwSet.collection_hashed_rwset[i];
+            const privateRWSet = rwSet.private_rwset[i];
+
+            const rwsetName = format("%s.rwSet[%d].CollectionRWSet[%d]", action, index, i);
+
+            this.results.addResult("checkPrivateData",
+                ResultPredicate.EQBIN,
+                {
+                    name: rwsetName + ".PvtRWSetHash",
+                    value: hashedRWSet.pvt_rwset_hash
+                },
+                {
+                    name: "Hash(" + privateRWSet + ".RWSet)",
+                    value: FabricPrivateRWSet.calcHash(privateRWSet.getRWSetBytes())
+                }
+            );
+
+            const privateRWSetData = privateRWSet.getRWSet();
+            this.results.addResult("checkPrivateData",
+                ResultPredicate.EQ,
+                { name: rwsetName + ".CollectionName",
+                  value: hashedRWSet.collection_name },
+                { name: privateRWSet + ".CollectionName", value: privateRWSetData.collection_name }
+            );
+
+            // Check for Writes
+            this.results.addResult("checkPrivateData",
+                ResultPredicate.EQ,
+                { name: rwsetName + ".RWSet.Writes.Length",
+                  value: hashedRWSet.hashed_rwset.hashed_writes.length },
+                { name: privateRWSet + ".RWSet.Length", value: privateRWSetData.rwset.writes.length }
+            );
+            for (const k in hashedRWSet.hashed_rwset.hashed_writes) {
+                const hashedWrite = hashedRWSet.hashed_rwset.hashed_writes[k];
+                const privWrite = privateRWSetData.rwset.writes[k];
+
+                const keyHash = FabricPrivateRWSet.calcHash(Buffer.from(privWrite.key));
+                const valueHash = FabricPrivateRWSet.calcHash(privWrite.value.toBuffer());
+
+                this.results.addResult("checkPrivateData", ResultPredicate.EQBIN,
+                    { name: format("%s.RWSet.Writes[%d].KeyHash", rwsetName, k),
+                      value: hashedWrite.key_hash },
+                    { name: format("Hash(%s.RWSet.Writes[%d].Key)", privateRWSet, k),
+                      value: keyHash }
+                );
+
+                this.results.addResult("checkPrivateData", ResultPredicate.EQBIN,
+                    { name: format("%s.RWSet.Writes[%d].ValueHash", rwsetName, k),
+                    value: hashedWrite.value_hash },
+                    { name: format("Hash(%s.RWSet.Writes[%d].Value)", privateRWSet, k),
+                    value: valueHash }
                 );
             }
         }

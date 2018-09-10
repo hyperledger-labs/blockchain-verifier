@@ -4,12 +4,51 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { openSync, read, readSync } from "fs";
+import { openSync, read, readFileSync, readSync, statSync } from "fs";
+import level from "level";
+import * as path from "path";
 import { format } from "util";
 
 import { BCVerifierError, BCVerifierNotImplemented, Block } from "../common";
 import { FabricBlock } from "../data/fabric-data";
 import { BlockSource, NetworkPlugin } from "../network-plugin";
+
+type FabricBlockConfigSet = FabricBlockConfig[];
+
+interface FabricBlockConfig {
+    name?: string;
+    blockFile?: string;
+    ledgerStore?: string;
+    privateDataStore?: string;
+    stateLevelDB?: string;
+}
+
+type FabricBlockFileInfo = FabricBlockPosition[];
+
+interface FabricBlockPosition {
+    file: number;
+    offset: number;
+    size: number;
+}
+
+function getConfig(config: string): FabricBlockConfigSet {
+    /*
+     * For compatibility, the config is assumed to be a path to the block file
+     * unless it is a path to the json file (judged by the extension).
+     */
+    if (config === "") {
+        throw new BCVerifierError("fabric-block plugin: config should be a path to json or block file");
+    } else if (config.toLowerCase().endsWith(".json")) {
+        return JSON.parse(readFileSync(config, { encoding: "utf-8" }));
+    } else {
+        const st = statSync(config);
+        if (st.isDirectory()) {
+            return [{ name: "blockDir", ledgerStore: config }];
+        } else {
+            return [{ name: "block", blockFile: config }];
+        }
+    }
+}
 
 function readVarInt(file: number, position: number | null): [number, number] {
     let ret = 0;
@@ -38,16 +77,30 @@ function readVarInt(file: number, position: number | null): [number, number] {
     }
 }
 
+function newLevel(db: string, opts: any): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+        level(db, opts, (error, obj) => {
+            if (error != null) {
+                reject(error);
+            } else {
+                resolve(obj);
+            }
+        });
+    });
+}
+
 export class FabricBlockSource implements BlockSource {
-    private blockFileName: string;
-    private file: number;
-    private blockInfo: Array<{ offset: number, size: number }>;
+    public static async createFromConfig(config: FabricBlockConfig): Promise<FabricBlockSource> {
+        const blockInfo: FabricBlockFileInfo = [];
 
-    constructor(config: string) {
-        this.blockFileName = config;
-
-        this.file = openSync(this.blockFileName, "r");
-        this.blockInfo = [];
+        let file;
+        if (config.blockFile != null) {
+            file = openSync(config.blockFile, "r");
+        } else if (config.ledgerStore != null) {
+            file = openSync(path.join(config.ledgerStore, "blockfile_000000"), "r");
+        } else {
+            throw new BCVerifierError("Cannot find ledger file");
+        }
 
         try {
             let position = 0;
@@ -55,9 +108,9 @@ export class FabricBlockSource implements BlockSource {
             let len = 0;
 
             while (true) {
-                [size, len] = readVarInt(this.file, position);
+                [size, len] = readVarInt(file, position);
                 if (size > 0) {
-                    this.blockInfo.push({ offset: position + len, size: size });
+                    blockInfo.push({ file: file, offset: position + len, size: size });
                     position += len + size;
                 } else {
                     break;
@@ -66,6 +119,26 @@ export class FabricBlockSource implements BlockSource {
         } catch (e) {
             // Read until EOF.
         }
+
+        let privateDB = null;
+        if (config.privateDataStore != null) {
+            privateDB = await newLevel(config.privateDataStore,
+                                       { createIfMissing: false, keyEncoding: "binary", valueEncoding: "binary" });
+        }
+
+        return new FabricBlockSource(config, file, blockInfo, privateDB);
+    }
+
+    private file: number;
+    private blockInfo: FabricBlockFileInfo;
+    private config: FabricBlockConfig;
+    private privateDB: any;
+
+    private constructor(config: FabricBlockConfig, file: number, blockInfo: FabricBlockFileInfo, privateDB: any) {
+        this.file = file;
+        this.blockInfo = blockInfo;
+        this.config = config;
+        this.privateDB = privateDB;
     }
 
     public getBlock(blockNumber: number): Promise<Block> {
@@ -80,7 +153,14 @@ export class FabricBlockSource implements BlockSource {
             read(this.file, buffer, 0, bi.size, bi.offset,
                 (err, bytesRead, bufferRead) => {
                     if (err == null && bytesRead === bi.size) {
-                        resolve(FabricBlock.fromFileBytes(bufferRead));
+                        const b = FabricBlock.fromFileBytes(bufferRead);
+                        if (this.privateDB != null) {
+                            b.addPrivateData(this.privateDB).then(() => {
+                                resolve(b);
+                            }, (error) => { reject(error); });
+                        } else {
+                            resolve(b);
+                        }
                     } else {
                         reject(err);
                     }
@@ -110,7 +190,15 @@ export class FabricBlockSource implements BlockSource {
     }
 
     public getSourceID(): string {
-        return this.blockFileName;
+        if (this.config.name != null) {
+            return this.config.name;
+        } else if (this.config.ledgerStore != null) {
+            return this.config.ledgerStore;
+        } else if (this.config.blockFile != null) {
+            return this.config.blockFile;
+        } else {
+            return "block";
+        }
     }
     public getSourceOrganizationID(): string {
         return "file";
@@ -118,25 +206,37 @@ export class FabricBlockSource implements BlockSource {
 
     public findBlockByTransaction(transactionId: string): Promise<Block> {
         // No special function for finding a transaction.
-        // Throw an not-implemented exception to make the provider to perform a slow-path
+        // Throw a not-implemented exception to make the provider to perform a slow-path
         throw new BCVerifierNotImplemented("findBlockByTransaction is not implemented");
     }
 }
 
 export default class FabricBlockPlugin implements NetworkPlugin {
-    private sources: FabricBlockSource[];
+    private sources: FabricBlockSource[] | undefined;
+    private configSet: FabricBlockConfigSet;
 
-    constructor(config: string) {
-        if (config === "") {
-            throw new BCVerifierError("fabric-block plugin: config should be the block filename");
-        }
-        this.sources = [ new FabricBlockSource(config) ];
+    constructor(configString: string) {
+        this.configSet = getConfig(configString);
     }
 
     public async getBlockSources(): Promise<BlockSource[]> {
+        if (this.sources == null) {
+            this.sources = [];
+            for (const i in this.configSet) {
+                const config = this.configSet[i];
+                if (config.name == null) {
+                    config.name = "Source " + i;
+                }
+                this.sources.push(await FabricBlockSource.createFromConfig(config));
+            }
+        }
         return this.sources;
     }
     public async getPreferredBlockSource(): Promise<BlockSource> {
-        return this.sources[0];
+        const sources = await this.getBlockSources();
+        if (sources.length === 0) {
+            throw new BCVerifierError("No Block Source found");
+        }
+        return sources[0];
     }
 }

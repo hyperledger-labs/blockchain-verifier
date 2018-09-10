@@ -6,11 +6,9 @@
 
 import { format } from "util";
 
-import { BCVerifierError, BCVerifierNotFound, BCVerifierNotImplemented, Block, HashValueType, ResultCode,
-         ResultPredicate, Transaction } from "../common";
+import { BCVerifierError, BCVerifierNotFound, BCVerifierNotImplemented, Block,
+         HashValueType, Transaction } from "../common";
 import { BlockSource } from "../network-plugin";
-import { BlockProvider } from "../provider";
-import { ResultSet } from "../result-set";
 
 export type TransactionIDAndType = { id: string, type: number };
 

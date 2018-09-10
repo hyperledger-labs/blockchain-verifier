@@ -21,6 +21,10 @@ export const Protos = {
                                          "../../node_modules/fabric-client/lib/protos/msp/identities.proto")).msp,
     proposal: grpc.load<any>(path.join(__dirname,
                                        "../../node_modules/fabric-client/lib/protos/peer/proposal.proto")).protos,
+    rwset: grpc.load<any>(path.join(__dirname,
+                                    "../../node_modules/fabric-client/lib/protos/ledger/rwset/rwset.proto")).rwset,
+    kvrwset: grpc.load<any>(path.join(__dirname,
+                            "../../node_modules/fabric-client/lib/protos/ledger/rwset/kvrwset/kv_rwset.proto")).kvrwset,
     transaction: grpc.load<any>(path.join(__dirname,
                                           "../../node_modules/fabric-client/lib/protos/peer/transaction.proto")).protos
 };
@@ -58,6 +62,51 @@ class VarBuffer {
 
         return slice;
     }
+}
+
+function encodeOrderPreservingInt(num: number) {
+    const enc: number[] = [];
+    // First encode to bytes in little-endian
+    while (num > 0) {
+        // tslint:disable-next-line: no-bitwise
+        enc.push(num & 0xff);
+        // tslint:disable-next-line: no-bitwise
+        num = num >> 8;
+    }
+    const szBuf = encodeVarInt(enc.length);
+    const dataBuf = Buffer.alloc(enc.length);
+
+    for (let i = 0; i < enc.length; i++) {
+        const j = enc.length - i - 1;
+        dataBuf.writeUInt8(enc[j], i);
+    }
+    return Buffer.concat([szBuf, dataBuf]);
+}
+
+function encodeVarInt(num: number): Buffer {
+    const enc: number[] = [];
+
+    while (num > 0) {
+        // tslint:disable-next-line: no-bitwise
+        enc.push(num & 0x7f);
+        // tslint:disable-next-line: no-bitwise
+        num = num >> 7;
+    }
+    if (enc.length === 0) {
+        enc.push(0);
+    }
+
+    const buf = Buffer.alloc(enc.length);
+    for (let i = 0; i < enc.length; i++) {
+        const j = enc.length - i - 1;
+        if (j !== 0) {
+            // tslint:disable-next-line: no-bitwise
+            buf.writeUInt8(enc[j] | 0x80, i);
+        } else {
+            buf.writeUInt8(enc[j], i);
+        }
+    }
+    return buf;
 }
 
 export enum FabricMetaDataIndex {
@@ -219,6 +268,12 @@ export class FabricBlock implements Block {
         throw new BCVerifierNotFound("Not config transaction or multiple transactions found");
     }
 
+    public async addPrivateData(privateDB: any): Promise<void> {
+        for (const i in this.transactions) {
+            await this.transactions[i].addPrivateData(privateDB);
+        }
+    }
+
     public toString(): string {
         return format("Block(%d)", this.getBlockNumber());
     }
@@ -245,6 +300,10 @@ export enum FabricTransactionType {
 }
 
 export class FabricTransaction implements Transaction {
+    public static getConfigTxName(blockNumber: number) {
+        return format("config.%d", blockNumber);
+    }
+
     public signature: Buffer;
     public header: any;
     public data: any;
@@ -254,6 +313,7 @@ export class FabricTransaction implements Transaction {
     public rawData: Buffer;
     public rawTransaction: RawEnvelope;
     public index: number;
+    public actions: FabricAction[];
 
     constructor(blockData: any, block: FabricBlock, validity: boolean, rawData: Buffer, index: number) {
         this.signature = blockData.signature;
@@ -264,12 +324,27 @@ export class FabricTransaction implements Transaction {
         this.rawData = rawData;
         this.rawTransaction = this.getRawEnvelope();
         this.index = index;
+
+        // Decode actions
+        this.actions = [];
+
+        if (this.getTransactionType() === FabricTransactionType.ENDORSER_TRANSACTION) {
+            const payload = Protos.common.Payload.decode(this.getPayloadBytes());
+            const payloadData = payload.getData().toBuffer();
+            const transaction = Protos.transaction.Transaction.decode(payloadData);
+
+            for (const i in transaction.actions) {
+                this.actions.push(new FabricAction(this, transaction.actions[i],
+                                                   this.data.actions[i], parseInt(i, 10)));
+            }
+        }
     }
 
     public getTransactionID(): string {
-        if (this.getTransactionType() === 1) {
-            // As a config transaction does not have tx_id, use block number instead.
-            return format("config.%d", this.block.getBlockNumber());
+        if (this.getTransactionType() === FabricTransactionType.CONFIG) {
+            // As a config transaction does not have tx_id and it should be only transaction in a block,
+            // use block number instead.
+            return FabricTransaction.getConfigTxName(this.block.getBlockNumber());
         } else {
             return this.header.channel_header.tx_id;
         }
@@ -305,19 +380,24 @@ export class FabricTransaction implements Transaction {
     }
 
     public getActions(): FabricAction[] {
-        const payload = Protos.common.Payload.decode(this.getPayloadBytes());
-        const payloadData = payload.getData().toBuffer();
-        const transaction = Protos.transaction.Transaction.decode(payloadData);
-        const actions: FabricAction[] = [];
+        return this.actions;
+    }
 
-        for (const i in transaction.actions) {
-            actions.push(new FabricAction(this, transaction.actions[i], this.data.actions[i], parseInt(i, 10)));
+    public getChannelName(): string {
+        return this.header.channel_header.channel_id;
+    }
+
+    public async addPrivateData(privateDB: any): Promise<void> {
+        if (this.getTransactionType() === FabricTransactionType.ENDORSER_TRANSACTION) {
+            const channelName = this.getChannelName();
+            for (const action of this.actions) {
+                await action.addPrivateData(channelName, privateDB);
+            }
         }
-        return actions;
     }
 
     public toString(): string {
-        if (this.getTransactionType() === 1) {
+        if (this.getTransactionType() === FabricTransactionType.CONFIG) {
             return format("%s.ConfigTx", this.block.toString());
         } else {
             return format("%s.Tx(%d:%d)", this.block.toString(), this.block.getBlockNumber(), this.index);
@@ -367,8 +447,100 @@ export class FabricAction {
     public getEndorsements(): any[] {
         return this.decoded.payload.action.endorsements;
     }
+    public getRWSets(): any {
+        const payload = this.getResponsePayload();
+        return payload.extension.results.ns_rwset;
+    }
+    public async addPrivateData(channelName: string, privateDB: any) {
+        const rwsets = this.getRWSets();
+
+        for (const rwset of rwsets) {
+            if (rwset.collection_hashed_rwset != null) {
+                const namespace = rwset.namespace;
+                const privateRWSets: Array<FabricPrivateRWSet | null> = [];
+                for (const hashedRWSet of rwset.collection_hashed_rwset) {
+                    const collection = hashedRWSet.collection_name;
+                    const privateRWSet =
+                        await FabricPrivateRWSet.queryPrivateStore(privateDB, channelName, this.transaction,
+                                                                   namespace, collection);
+                    privateRWSets.push(privateRWSet);
+                }
+                rwset.private_rwset = privateRWSets;
+            }
+        }
+    }
 
     public toString(): string {
         return format("%s.Action[%d]", this.transaction.toString(), this.index);
+    }
+}
+
+export class FabricPrivateRWSet {
+    public static PRIVATE_DATA_PREFIX = Buffer.from([0x02]);
+    public static KEY_SEPARATOR = Buffer.from([0x00]);
+
+    public static async queryPrivateStore(privateDB: any, channelName: string, transaction: FabricTransaction,
+                                          namespace: string, collection: string): Promise<FabricPrivateRWSet | null> {
+        const blockNumber = transaction.getBlock().getBlockNumber();
+        const txNumber = transaction.getIndexInBlock();
+        const queryKey = this.buildKey(channelName, blockNumber, txNumber,
+                                       namespace, collection);
+        try {
+            const data = await privateDB.get(queryKey);
+
+            const name = format("%d:%d,%s,%s", blockNumber, txNumber, namespace, collection);
+            return new FabricPrivateRWSet(data, name);
+        } catch (e) {
+            return null;
+        }
+    }
+    public static buildKey(channelName: string, blockNumber: number, txNumber: number,
+                           namespace: string, collection: string): Buffer {
+        const blockNumberEncoded = encodeOrderPreservingInt(blockNumber);
+        const txNumberEncoded = encodeOrderPreservingInt(txNumber);
+
+        return Buffer.concat([
+            Buffer.from(channelName, "utf-8"),
+            this.KEY_SEPARATOR,
+            this.PRIVATE_DATA_PREFIX,
+            blockNumberEncoded,
+            txNumberEncoded,
+            Buffer.from(namespace, "utf-8"),
+            this.KEY_SEPARATOR,
+            Buffer.from(collection, "utf-8")
+        ]);
+    }
+    public static calcHash(data: Buffer): Buffer {
+        const hash = createHash("sha256");
+        hash.update(data);
+
+        return hash.digest();
+    }
+
+    private rawBytes: Buffer;
+    private rwSetBytes: Buffer;
+    private decoded: any;
+    private name: string;
+
+    constructor(data: Buffer, name: string) {
+        this.rawBytes = data;
+
+        const protoCol =  Protos.rwset.CollectionPvtReadWriteSet.decode(this.rawBytes);
+        this.rwSetBytes = protoCol.getRwset().toBuffer();
+
+        this.decoded = { collection_name: protoCol.getCollectionName(),
+                         rwset: Protos.kvrwset.KVRWSet.decode(this.rwSetBytes) };
+
+        this.name = name;
+    }
+
+    public getRWSet() {
+        return this.decoded;
+    }
+    public getRWSetBytes() {
+        return this.rwSetBytes;
+    }
+    public toString() {
+        return format("FabricPrivateDB(%s)", this.name);
     }
 }
