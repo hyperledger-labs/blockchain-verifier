@@ -6,7 +6,7 @@ The goal of this tool is to verify the integrity of blockchain blocks and transa
 
 ## Supported Blockchain Platforms
 
-- Hyperledger Fabric v1.1
+- Hyperledger Fabric v1.4
 
 ## Prerequisite
 
@@ -25,7 +25,7 @@ $ npm run build
 ## Usage
 
 ```
-$ node ./dist/cli.js -n (Network plugin) -c (Network config) -o (Result file) (Command)
+$ node ./build/cli.js -n (Network plugin) -c (Network config) -o (Result file) (Command)
 ```
 
 Run with `-h` for the full list of the options.
@@ -47,7 +47,7 @@ Run with `-h` for the full list of the options.
 ### Example
 
 ```
-$ node ./dist/cli.js -n fabric-block -c /tmp/block/blockfile_000000 -o result.json start
+$ node ./build/cli.js -n fabric-block -c /tmp/block/blockfile_000000 -o result.json start
 ```
 
 Runs verification against a Hyperledger Fabric ledger file `/tmp/block/blockfile_000000` using the `fabric-block` plugin.
@@ -56,8 +56,8 @@ Runs verification against a Hyperledger Fabric ledger file `/tmp/block/blockfile
 
 | Name           | Supported Platform      | Description                         | Config value (`-c` option)             |
 |----------------|-------------------------|-------------------------------------|----------------------------------------|
-| `fabric-block` | Hyperledger Fabric v1.1 | Verify a ledger file and private DB | Path to the ledger file or config JSON |
-| `fabric-query` | Hyperledger Fabric v1.1 | Verify blocks by querying to a peer | Path to the query config file          |
+| `fabric-block` | Hyperledger Fabric v1.4 | Verify a ledger file and private DB | Path to the ledger file or config JSON |
+| `fabric-query` | Hyperledger Fabric v1.4 | Verify blocks by querying to a peer | Path to the query config file          |
 
 ### fabric-block
 

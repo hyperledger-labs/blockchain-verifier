@@ -1,42 +1,43 @@
 {
   "name": "bcverifier",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Blockchain Verifier",
-  "main": "dist/bcverifier.js",
+  "main": "build/bcverifier.js",
   "bin": {
-    "bcverifier": "dist/cli.js"
+    "bcverifier": "build/cli.js"
   },
   "scripts": {
-    "build": "npx tsc",
-    "test": "npx jest --coverage",
-    "lint": "npx tslint 'src/**/*.ts'"
+    "build": "tsc",
+    "test": "jest --coverage",
+    "lint": "tslint 'src/**/*.ts'",
+    "prepare": "tsc"
   },
   "author": "Taku Shimosawa <taku.shimosawa@hal.hitachi.com>",
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/asn1js": "0.0.1",
-    "@types/jest": "^23.3.1",
-    "@types/node": "^10.9.4",
-    "jest": "^23.5.0",
-    "ts-jest": "^22.4.6",
-    "typescript": "^2.8.3"
+    "@types/jest": "^24.0.11",
+    "@types/node": "^10.14.1",
+    "jest": "^24.5.0",
+    "ts-jest": "^24.0.0",
+    "typescript": "^3.3.0"
   },
   "dependencies": {
-    "@types/pem": "^1.9.3",
-    "asn1js": "^2.0.21",
-    "commander": "^2.18.0",
-    "fabric-ca-client": "^1.3.0-snapshot",
-    "fabric-client": "^1.3.0-snapshot",
+    "@types/pem": "^1.9.5",
+    "asn1js": "^2.0.22",
+    "commander": "^2.19.0",
+    "fabric-ca-client": "^1.4.0",
+    "fabric-client": "^1.4.0",
     "level": "^4.0.0",
-    "pem": "^1.12.5",
+    "pem": "^1.14.2",
     "protobufjs": "^6.8.8",
-    "tslint": "^5.11.0"
+    "tslint": "^5.14.0"
   },
   "jest": {
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(tsx?)$",
     "moduleFileExtensions": [
       "ts",
       "tsx",
