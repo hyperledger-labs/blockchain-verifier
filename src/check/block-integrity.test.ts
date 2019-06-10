@@ -5,7 +5,7 @@
  */
 
 import { HashValueType, ResultCode, ResultPredicate } from "../common";
-import { correctBlocks, MockBlock, MockSource } from "../network/mock-block";
+import { correctBlocks, MockBlock, MockSource } from "../mock/mock-block";
 import { BlockProvider } from "../provider";
 import { ResultSet } from "../result-set";
 import GenericBlockIntegrityChecker from "./block-integrity";

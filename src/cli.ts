@@ -19,7 +19,7 @@ const CLICommands: { [commandName: string]: () => Promise<number> } = {
     start : start
 };
 
-commander.version("0.1")
+commander.version("v0.1.2")
     .description("Blockchain Verifier CLI")
     .option("-n, --network-type <type>", "Network type")
     .option("-c, --network-config <config>", "Config for network")

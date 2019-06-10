@@ -5,7 +5,7 @@
  */
 
 import { Block } from "./common";
-import { correctBlocks, MockSource } from "./network/mock-block";
+import { correctBlocks, MockSource } from "./mock/mock-block";
 import { BlockProvider } from "./provider";
 
 describe("BlockProvider", () => {

@@ -196,7 +196,7 @@ Below is some excerpt from a result JSON:
 
 The part above shows that the block 3's previous hash entry is checked against the actual hash value for the block 2,
 and the block 3's hash entry is also checked against the actual hash value for block 3.
-It also shows that the signature header (certificate) for the transaction `b8f336..` is checked against the CA certificate for the configuration.
+It also shows that the signature header (certificate) for the transaction `b9f336..` is checked against the CA certificate for the configuration.
 
 The results for these checks are all "OK," which means that the integrity of the blockchain is verified.
 
