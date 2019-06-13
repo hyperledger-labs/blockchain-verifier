@@ -7,7 +7,7 @@
 import { format } from "util";
 
 import { BCVerifierError, BCVerifierNotFound, BCVerifierNotImplemented, Block,
-         HashValueType, Transaction } from "../common";
+         HashValueType, Transaction, KeyValueState } from "../common";
 import { BlockSource } from "../network-plugin";
 
 export type TransactionIDAndType = { id: string, type: number };
@@ -35,6 +35,9 @@ export class MockTransaction implements Transaction {
     }
     public getTransactionType(): number {
         return this.transactionType;
+    }
+    public async getKeyValueState(): Promise<KeyValueState> {
+        throw new BCVerifierNotImplemented();
     }
 }
 

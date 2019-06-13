@@ -5,10 +5,13 @@
  */
 
 import { ResultSet } from "./result-set";
+import { BlockProvider } from "./provider";
 
 export interface VerificationConfig {
     networkType: string;
     networkConfig: string;
+
+    applicationCheckers: string[];
 }
 
 export enum ResultCode {
@@ -90,6 +93,21 @@ export interface Transaction {
     getIndexInBlock(): number;
     getTransactionID(): string;
     getTransactionType(): number;
+    getKeyValueState(): Promise<KeyValueState>;
+}
+
+export interface KeyValue {
+    getValue(blockOrTx?: Block | Transaction): Buffer;
+    getHistory(): Transaction[];
+}
+
+export interface KeyValueState {
+    getKeys(): KeyValue[];
+}
+
+export class CheckPlugin {
+    constructor(provider: BlockProvider, resultSet: ResultSet) {
+    }
 }
 
 export interface BlockCheckPlugin {
@@ -102,4 +120,14 @@ export interface TransactionCheckPlugin {
 
 export interface OutputPlugin {
     convertResult(resultSet: ResultSet): Promise<Buffer>;
+}
+
+export interface AppStateCheckLogic {
+    probeStateCheck(kvState: KeyValueState): Promise<boolean>;
+    performStateCheck(kvState: KeyValueState): Promise<void>;
+}
+
+export interface AppTransactionCheckLogic {
+    probeTransactionCheck(tx: Transaction): Promise<boolean>;
+    performTransactionCheck(tx: Transaction): Promise<void>;
 }

@@ -11,7 +11,7 @@ import * as grpc from "grpc";
 import * as path from "path";
 import { format } from "util";
 
-import { BCVerifierNotFound, Block, HashValueType, Transaction } from "../common";
+import { BCVerifierNotFound, Block, HashValueType, Transaction, KeyValueState, BCVerifierNotImplemented } from "../common";
 
 // Proto buffer
 export const Protos = {
@@ -402,6 +402,10 @@ export class FabricTransaction implements Transaction {
         } else {
             return format("%s.Tx(%d:%d)", this.block.toString(), this.block.getBlockNumber(), this.index);
         }
+    }
+
+    public async getKeyValueState(): Promise<KeyValueState> {
+        throw new BCVerifierNotImplemented();
     }
 }
 

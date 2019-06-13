@@ -19,11 +19,16 @@ const CLICommands: { [commandName: string]: () => Promise<number> } = {
     start : start
 };
 
+function list(val: string): string[] {
+    return val.split(",");
+}
+
 commander.version("v0.1.2")
     .description("Blockchain Verifier CLI")
     .option("-n, --network-type <type>", "Network type")
     .option("-c, --network-config <config>", "Config for network")
     .option("-o, --output <result file>", "Result file")
+    .option("-k, --checkers <checkers>", "Checker module list", list)
     .arguments("<command>")
     .action((command) => {
         cliCommand = command;
@@ -59,10 +64,15 @@ async function start(): Promise<number> {
         commander.outputHelp();
         process.exit(1);
     }
+    let applicationCheckers = [];
+    if (commander.checkers != null) {
+        applicationCheckers = commander.checkers;
+    }
 
     const bcv = new BCVerifier({
         networkType: commander.networkType,
-        networkConfig: commander.networkConfig
+        networkConfig: commander.networkConfig,
+        applicationCheckers
     });
 
     const resultSet = await bcv.verify();

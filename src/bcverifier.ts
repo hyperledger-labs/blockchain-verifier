@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BCVerifierError, BlockCheckPlugin, TransactionCheckPlugin, VerificationConfig } from "./common";
+import { BCVerifierError, BlockCheckPlugin, TransactionCheckPlugin, VerificationConfig, Transaction, BCVerifierNotImplemented, AppStateCheckLogic, AppTransactionCheckLogic } from "./common";
 import { NetworkPlugin } from "./network-plugin";
 import { BlockProvider } from "./provider";
 import { ResultSet } from "./result-set";
@@ -70,7 +70,20 @@ export class BCVerifier {
             const VerifierModule = await import(info.moduleName);
             txCheckPlugins.push(new VerifierModule.default(blockProvider, this.resultSet));
         }
+        const appStateCheckers: AppStateCheckLogic[] = [];
+        const appTxCheckers: AppTransactionCheckLogic[] = [];
+        for (const modName of this.config.applicationCheckers) {
+            const checkerModule = await import(modName);
+            const checkerObject = new checkerModule.default(blockProvider, this.resultSet) as AppStateCheckLogic & AppTransactionCheckLogic;
+            if (checkerObject.probeStateCheck != null) {
+                appStateCheckers.push(checkerObject);
+            }
+            if (checkerObject.probeTransactionCheck != null) {
+                appTxCheckers.push(checkerObject);
+            }
+        }
 
+        let lastTx: Transaction | null = null;
         for (let i = 0; i < blockHeight; i++) {
             const b = await blockProvider.getBlock(i);
 
@@ -81,6 +94,33 @@ export class BCVerifier {
             for (const tx of b.getTransactions()) {
                 for (const v of txCheckPlugins) {
                     await v.performCheck(tx.getTransactionID());
+                }
+                lastTx = tx;
+            }
+        }
+
+        if (lastTx != null) {
+            try {
+                const stateSet = await lastTx.getKeyValueState();
+                for (const v of appStateCheckers) {
+                    if (await v.probeStateCheck(stateSet)) {
+                        await v.performStateCheck(stateSet);
+                    }
+                }
+            } catch (e) {
+                if (!(e instanceof BCVerifierNotImplemented)) {
+                    throw e;
+                }
+            }
+
+            for (let i = 0; i < blockHeight; i++) {
+                const b = await blockProvider.getBlock(i);
+                for (const tx of b.getTransactions()) {
+                    for (const v of appTxCheckers) {
+                        if (await v.probeTransactionCheck(tx)) {
+                            await v.performTransactionCheck(tx);
+                        }
+                    }
                 }
             }
         }
