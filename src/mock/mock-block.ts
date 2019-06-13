@@ -7,7 +7,7 @@
 import { format } from "util";
 
 import { BCVerifierError, BCVerifierNotFound, BCVerifierNotImplemented, Block,
-         HashValueType, Transaction, KeyValueState } from "../common";
+         HashValueType, KeyValueState, Transaction } from "../common";
 import { BlockSource } from "../network-plugin";
 
 export type TransactionIDAndType = { id: string, type: number };

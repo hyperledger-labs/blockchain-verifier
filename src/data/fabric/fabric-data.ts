@@ -6,27 +6,25 @@
 
 import { Integer, OctetString, Sequence } from "asn1js";
 import { createHash } from "crypto";
-import { BlockData, decode, decodeBlock, HeaderType } from "fabric-client/lib/BlockDecoder";
+import { decode, decodeBlock, HeaderType } from "fabric-client/lib/BlockDecoder";
 import * as grpc from "grpc";
 import * as path from "path";
 import { format } from "util";
+import { BlockData } from "./fabric-types";
 
-import { BCVerifierNotFound, Block, HashValueType, Transaction, KeyValueState, BCVerifierNotImplemented } from "../common";
+import { BCVerifierNotFound, BCVerifierNotImplemented, Block, HashValueType,
+         KeyValueState, Transaction } from "../../common";
 
 // Proto buffer
-export const Protos = {
-    common: grpc.load<any>(path.join(__dirname,
-                                     "../../node_modules/fabric-client/lib/protos/common/common.proto")).common,
-    identities: grpc.load<any>(path.join(__dirname,
-                                         "../../node_modules/fabric-client/lib/protos/msp/identities.proto")).msp,
-    proposal: grpc.load<any>(path.join(__dirname,
-                                       "../../node_modules/fabric-client/lib/protos/peer/proposal.proto")).protos,
-    rwset: grpc.load<any>(path.join(__dirname,
-                                    "../../node_modules/fabric-client/lib/protos/ledger/rwset/rwset.proto")).rwset,
-    kvrwset: grpc.load<any>(path.join(__dirname,
-                            "../../node_modules/fabric-client/lib/protos/ledger/rwset/kvrwset/kv_rwset.proto")).kvrwset,
-    transaction: grpc.load<any>(path.join(__dirname,
-                                          "../../node_modules/fabric-client/lib/protos/peer/transaction.proto")).protos
+//   TODO; in v2.0, should be replaced with fabric-protos library
+const PROTO_PATH = path.join(__dirname, "../../../node_modules/fabric-client/lib/protos");
+export const PROTOS = {
+    common: grpc.load<any>(path.join(PROTO_PATH, "common/common.proto")).common,
+    identities: grpc.load<any>(path.join(PROTO_PATH, "msp/identities.proto")).msp,
+    proposal: grpc.load<any>(path.join(PROTO_PATH, "peer/proposal.proto")).protos,
+    rwset: grpc.load<any>(path.join(PROTO_PATH, "ledger/rwset/rwset.proto")).rwset,
+    kvrwset: grpc.load<any>(path.join(PROTO_PATH, "ledger/rwset/kvrwset/kv_rwset.proto")).kvrwset,
+    transaction: grpc.load<any>(path.join(PROTO_PATH, "peer/transaction.proto")).protos
 };
 
 class VarBuffer {
@@ -169,7 +167,7 @@ export class FabricBlock implements Block {
         } else {
             this.block = decode(opt.data);
 
-            const protoBlock = Protos.common.Block.decode(opt.data);
+            const protoBlock = PROTOS.common.Block.decode(opt.data);
             const data: Buffer[] = [];
             for (const dataProto of protoBlock.getData().getData()) {
                 data.push(dataProto.toBuffer());
@@ -329,9 +327,9 @@ export class FabricTransaction implements Transaction {
         this.actions = [];
 
         if (this.getTransactionType() === FabricTransactionType.ENDORSER_TRANSACTION) {
-            const payload = Protos.common.Payload.decode(this.getPayloadBytes());
+            const payload = PROTOS.common.Payload.decode(this.getPayloadBytes());
             const payloadData = payload.getData().toBuffer();
-            const transaction = Protos.transaction.Transaction.decode(payloadData);
+            const transaction = PROTOS.transaction.Transaction.decode(payloadData);
 
             for (const i in transaction.actions) {
                 this.actions.push(new FabricAction(this, transaction.actions[i],
@@ -371,7 +369,7 @@ export class FabricTransaction implements Transaction {
     }
 
     public getRawEnvelope(): RawEnvelope {
-        const envelope = Protos.common.Envelope.decode(this.rawData);
+        const envelope = PROTOS.common.Envelope.decode(this.rawData);
 
         return {
             payload: envelope.getPayload().toBuffer(),
@@ -422,7 +420,7 @@ export class FabricAction {
         this.index = index;
         this.transaction = transaction;
 
-        this.rawPayload = Protos.transaction.ChaincodeActionPayload.decode(this.raw.payload);
+        this.rawPayload = PROTOS.transaction.ChaincodeActionPayload.decode(this.raw.payload);
     }
 
     public getProposalBytes(): Buffer {
@@ -529,11 +527,11 @@ export class FabricPrivateRWSet {
     constructor(data: Buffer, name: string) {
         this.rawBytes = data;
 
-        const protoCol =  Protos.rwset.CollectionPvtReadWriteSet.decode(this.rawBytes);
+        const protoCol =  PROTOS.rwset.CollectionPvtReadWriteSet.decode(this.rawBytes);
         this.rwSetBytes = protoCol.getRwset().toBuffer();
 
         this.decoded = { collection_name: protoCol.getCollectionName(),
-                         rwset: Protos.kvrwset.KVRWSet.decode(this.rwSetBytes) };
+                         rwset: PROTOS.kvrwset.KVRWSet.decode(this.rwSetBytes) };
 
         this.name = name;
     }

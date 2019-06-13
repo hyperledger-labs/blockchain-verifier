@@ -6,14 +6,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { createVerify } from "crypto";
-import { MSPConfig } from "fabric-client/lib/BlockDecoder";
-
-import { BCVerifier } from "../bcverifier";
-import { BCVerifierError, Block, BlockCheckPlugin, CheckResult, ResultCode, ResultPredicate } from "../common";
-import { FabricBlock, FabricMetaDataIndex, FabricTransaction, Protos } from "../data/fabric-data";
-import { getOrdererMSPs, verifyIdentityMSP, verifyMetadataSignature,
-         verifySignatureHeader } from "../data/fabric-utils";
+import { BlockCheckPlugin } from ".";
+import { BCVerifierError, ResultPredicate } from "../common";
+import { FabricBlock, FabricMetaDataIndex, FabricTransaction, getOrdererMSPs,
+         MSPConfig, PROTOS, verifyMetadataSignature, verifySignatureHeader } from "../data/fabric";
 import { BlockProvider } from "../provider";
 import { BlockResultPusher, ResultSet } from "../result-set";
 
@@ -29,7 +25,6 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
 
     public async performCheck(blockNumber: number): Promise<void> {
         const block = await this.provider.getBlock(blockNumber);
-        const checkResults: CheckResult[] = [];
 
         this.results.setBlock(block);
 
@@ -50,21 +45,9 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
             { name: block + ".Number", value: block.getBlockNumber() });
     }
 
-    private checkLastConfigSignature(block: FabricBlock, data: Buffer, metadataSignature: any): void {
-        // verifyMetadataSignature(block, data, metadataSignature)
-        this.results.addResult("verifyMetadataSignature",
-            ResultPredicate.INVOKE,
-            { name: "VerifyMetadataSignature", value: verifyMetadataSignature },
-            { name: block.toString(), value: block },
-            { name: block + ".Metadata[1].LastConfig", value: data },
-            { name: block + ".Metadata[1].Signature", value: metadataSignature }
-        );
-    }
-
    private async checkLastConfig(block: FabricBlock): Promise<FabricTransaction> {
-        const results: CheckResult[] = [];
         const lastConfig = block.getMetaData(FabricMetaDataIndex.LAST_CONFIG);
-        const lastConfigProto = new Protos.common.LastConfig();
+        const lastConfigProto = new PROTOS.common.LastConfig();
 
         lastConfigProto.setIndex(lastConfig.value.index);
         const lastConfigValue = lastConfigProto.toBuffer();

@@ -74,7 +74,7 @@ describe("BlockProvider", () => {
     });
 
     class StrangeSource extends MockSource {
-        public async findBlockByTransaction(transactionID: string): Promise<Block> {
+        public async findBlockByTransaction(_transactionID: string): Promise<Block> {
             return this.getBlock(1);
         }
     }

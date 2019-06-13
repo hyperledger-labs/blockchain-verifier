@@ -8,7 +8,7 @@ import Client, { Channel } from "fabric-client";
 import * as fs from "fs";
 import * as util from "util";
 import { BCVerifierError } from "../common";
-import { FabricBlock } from "../data/fabric-data";
+import { FabricBlock } from "../data/fabric";
 import { BlockSource, NetworkPlugin } from "../network-plugin";
 
 type FabricQueryPluginClientConfig = {

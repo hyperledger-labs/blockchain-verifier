@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { MSPConfig } from "fabric-client/lib/BlockDecoder";
+import {  } from "fabric-client/lib/BlockDecoder";
 import { format } from "util";
 
-import { BCVerifierError, CheckResult, ResultPredicate, TransactionCheckPlugin } from "../common";
+import { TransactionCheckPlugin } from ".";
+import { BCVerifierError, ResultPredicate } from "../common";
 import { FabricAction, FabricBlock, FabricMetaDataIndex, FabricPrivateRWSet,
-         FabricTransaction } from "../data/fabric-data";
-import { getApplicationMSPs, getOrdererMSPs, verifyIdentityMSP, verifySignature,
-         verifySignatureHeader } from "../data/fabric-utils";
+         FabricTransaction, getApplicationMSPs, getOrdererMSPs, MSPConfig,
+         verifyIdentityMSP, verifySignature, verifySignatureHeader } from "../data/fabric";
 import { BlockProvider } from "../provider";
 import { ResultSet, TransactionResultPusher } from "../result-set";
 
@@ -114,7 +114,6 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
     private async checkNormalTransaction(transaction: FabricTransaction,
                                          configInfo: FabricConfigTransactionInfo): Promise<void> {
         const actions = transaction.getActions();
-        const results: CheckResult[] = [];
 
         for (const action of actions) {
             // Check Proposal
@@ -126,9 +125,7 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
             );
 
             // Check Response
-            const response = action.getResponseBytes();
             const endorsements = action.getEndorsements();
-            const rawEndorsers = action.getEndorsersBytes();
 
             for (const i in endorsements) {
                 const endorsement = endorsements[i];

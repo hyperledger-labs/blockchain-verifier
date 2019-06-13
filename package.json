@@ -2,15 +2,16 @@
   "name": "bcverifier",
   "version": "0.1.2",
   "description": "Blockchain Verifier",
-  "main": "build/bcverifier.js",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "bin": {
     "bcverifier": "build/cli.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod a+x build/cli.js",
     "test": "jest --coverage",
     "lint": "tslint 'src/**/*.ts'",
-    "prepare": "tsc"
+    "prepare": "npm run build"
   },
   "author": "Taku Shimosawa <taku.shimosawa@hal.hitachi.com>",
   "license": "Apache-2.0",
@@ -18,20 +19,20 @@
     "@types/asn1js": "0.0.1",
     "@types/jest": "^24.0.11",
     "@types/node": "^10.14.1",
+    "@types/pem": "^1.9.5",
     "jest": "^24.5.0",
     "ts-jest": "^24.0.0",
-    "typescript": "^3.3.0"
+    "typescript": "^3.3.0",
+    "tslint": "^5.14.0"
   },
   "dependencies": {
-    "@types/pem": "^1.9.5",
     "asn1js": "^2.0.22",
     "commander": "^2.19.0",
     "fabric-ca-client": "^1.4.0",
     "fabric-client": "^1.4.0",
     "level": "^4.0.0",
     "pem": "^1.14.2",
-    "protobufjs": "^6.8.8",
-    "tslint": "^5.14.0"
+    "protobufjs": "^6.8.8"
   },
   "jest": {
     "transform": {

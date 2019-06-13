@@ -10,7 +10,7 @@ import * as path from "path";
 import { format } from "util";
 
 import { BCVerifierError, BCVerifierNotImplemented, Block } from "../common";
-import { FabricBlock } from "../data/fabric-data";
+import { FabricBlock } from "../data/fabric";
 import { BlockSource, NetworkPlugin } from "../network-plugin";
 
 type FabricBlockConfigSet = FabricBlockConfig[];
@@ -204,7 +204,7 @@ export class FabricBlockSource implements BlockSource {
         return "file";
     }
 
-    public findBlockByTransaction(transactionId: string): Promise<Block> {
+    public findBlockByTransaction(_transactionId: string): Promise<Block> {
         // No special function for finding a transaction.
         // Throw a not-implemented exception to make the provider to perform a slow-path
         throw new BCVerifierNotImplemented("findBlockByTransaction is not implemented");

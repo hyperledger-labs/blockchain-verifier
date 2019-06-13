@@ -5,10 +5,10 @@
  */
 
 import { createVerify } from "crypto";
-import { MSPConfig } from "fabric-client/lib/BlockDecoder";
 import { verifySigningChain } from "pem";
-import { BCVerifierNotFound } from "../common";
-import { FabricBlock, FabricTransaction, Protos } from "./fabric-data";
+import { BCVerifierNotFound } from "../../common";
+import { FabricBlock, FabricTransaction, PROTOS } from "./fabric-data";
+import { MSPConfig } from "./fabric-types";
 
 export function getOrdererMSPs(configTx: FabricTransaction): MSPConfig[] {
     const groups = configTx.data.config.channel_group.groups.Orderer.groups;
@@ -53,7 +53,11 @@ export function verifyIdentityMSP(mspName: string, identity: string, mspConfigs:
 
         return new Promise((resolve, reject) => {
             verifySigningChain(identity, msp.root_certs, (error, result) => {
-                resolve(result);
+                if (error != null) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
             });
         });
     } catch (e) {
@@ -80,11 +84,11 @@ export function verifySignature(signature: Buffer, data: Buffer, identity: any):
 export function verifyMetadataSignature(block: FabricBlock, data: Buffer, metadataSignature: any): boolean {
     const verify = createVerify("sha256");
 
-    const creator = new Protos.identities.SerializedIdentity();
+    const creator = new PROTOS.identities.SerializedIdentity();
     creator.setMspid(metadataSignature.signature_header.creator.Mspid);
     creator.setIdBytes(Buffer.from(metadataSignature.signature_header.creator.IdBytes));
 
-    const sigHeader = new Protos.common.SignatureHeader();
+    const sigHeader = new PROTOS.common.SignatureHeader();
     sigHeader.setCreator(creator.toBuffer());
     sigHeader.setNonce(metadataSignature.signature_header.nonce);
 

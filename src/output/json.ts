@@ -6,7 +6,8 @@
 
 import { format } from "util";
 
-import { BCVerifierError, CheckResult, OutputPlugin, ResultCode } from "../common";
+import { OutputPlugin } from ".";
+import { BCVerifierError, CheckResult, ResultCode } from "../common";
 import { ResultSet } from "../result-set";
 
 type JSONableCheckResult = {
@@ -86,12 +87,6 @@ function convertResultToJSONable(resultSet: ResultSet): JSONableResultSet {
 }
 
 export class JSONOutput implements OutputPlugin {
-    private fileName: string;
-
-    constructor(outputConfig: string) {
-        this.fileName = outputConfig;
-    }
-
     public async convertResult(resultSet: ResultSet): Promise<Buffer> {
         const resultObj = convertResultToJSONable(resultSet);
 

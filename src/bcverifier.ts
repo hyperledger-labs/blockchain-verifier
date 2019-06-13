@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BCVerifierError, BlockCheckPlugin, TransactionCheckPlugin, VerificationConfig, Transaction, BCVerifierNotImplemented, AppStateCheckLogic, AppTransactionCheckLogic } from "./common";
+import { AppStateCheckLogic, AppTransactionCheckLogic, BlockCheckPlugin, TransactionCheckPlugin } from "./check";
+import { BCVerifierError, BCVerifierNotImplemented, Transaction, VerificationConfig } from "./common";
 import { NetworkPlugin } from "./network-plugin";
 import { BlockProvider } from "./provider";
 import { ResultSet } from "./result-set";
@@ -47,8 +48,8 @@ export class BCVerifier {
     }
 
     public async verify(): Promise<ResultSet> {
-        const NetworkPluginModule = await import(this.networkPlugin.moduleName);
-        this.network = new NetworkPluginModule.default(this.config.networkConfig);
+        const networkPluginModule = await import(this.networkPlugin.moduleName);
+        this.network = new networkPluginModule.default(this.config.networkConfig);
 
         if (this.network == null) {
             throw new BCVerifierError("Failed to initialize network plugin");
@@ -62,19 +63,21 @@ export class BCVerifier {
 
         const blockCheckPlugins: BlockCheckPlugin[] = [];
         for (const info of blockVerifiers) {
-            const VerifierModule = await import(info.moduleName);
-            blockCheckPlugins.push(new VerifierModule.default(blockProvider, this.resultSet));
+            const verifierModule = await import(info.moduleName);
+            blockCheckPlugins.push(new verifierModule.default(blockProvider, this.resultSet));
         }
         const txCheckPlugins: TransactionCheckPlugin[] = [];
         for (const info of txVerifiers) {
-            const VerifierModule = await import(info.moduleName);
-            txCheckPlugins.push(new VerifierModule.default(blockProvider, this.resultSet));
+            const verifierModule = await import(info.moduleName);
+            txCheckPlugins.push(new verifierModule.default(blockProvider, this.resultSet));
         }
         const appStateCheckers: AppStateCheckLogic[] = [];
         const appTxCheckers: AppTransactionCheckLogic[] = [];
         for (const modName of this.config.applicationCheckers) {
             const checkerModule = await import(modName);
-            const checkerObject = new checkerModule.default(blockProvider, this.resultSet) as AppStateCheckLogic & AppTransactionCheckLogic;
+            const checkerObject: AppStateCheckLogic & AppTransactionCheckLogic
+                = new checkerModule.default(blockProvider, this.resultSet);
+
             if (checkerObject.probeStateCheck != null) {
                 appStateCheckers.push(checkerObject);
             }

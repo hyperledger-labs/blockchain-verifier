@@ -10,12 +10,12 @@
 import commander from "commander";
 import { writeFileSync } from "fs";
 import { BCVerifier } from "./bcverifier";
-import { BCVerifierError, CheckResult, ResultCode, ResultPredicate } from "./common";
+import { BCVerifierError } from "./common";
 import { JSONOutput } from "./output/json";
 
 let cliCommand: string | null = null;
 
-const CLICommands: { [commandName: string]: () => Promise<number> } = {
+const CLI_COMMANDS: { [commandName: string]: () => Promise<number> } = {
     start : start
 };
 
@@ -35,12 +35,12 @@ commander.version("v0.1.2")
     })
     .parse(process.argv);
 
-if (cliCommand == null || CLICommands[cliCommand] == null) {
+if (cliCommand == null || CLI_COMMANDS[cliCommand] == null) {
     console.error("ERROR: Command is not specified or unknown.");
     commander.outputHelp();
     process.exit(1);
 } else {
-    CLICommands[cliCommand]()
+    CLI_COMMANDS[cliCommand]()
     .then((retCode) => {
         process.exit(retCode);
     })
@@ -72,13 +72,13 @@ async function start(): Promise<number> {
     const bcv = new BCVerifier({
         networkType: commander.networkType,
         networkConfig: commander.networkConfig,
-        applicationCheckers
+        applicationCheckers: applicationCheckers
     });
 
     const resultSet = await bcv.verify();
 
     if (commander.output) {
-        const json = new JSONOutput("");
+        const json = new JSONOutput();
         console.log("Output the result to %s", commander.output);
 
         const buf = await json.convertResult(resultSet);

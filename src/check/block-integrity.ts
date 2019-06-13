@@ -6,7 +6,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Block, BlockCheckPlugin, CheckResult, HashValueType, ResultCode, ResultPredicate } from "../common";
+import { BlockCheckPlugin } from ".";
+import { Block, HashValueType, ResultPredicate } from "../common";
 import { BlockProvider } from "../provider";
 import { BlockResultPusher, ResultSet } from "../result-set";
 

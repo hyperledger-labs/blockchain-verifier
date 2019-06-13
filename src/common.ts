@@ -4,9 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ResultSet } from "./result-set";
-import { BlockProvider } from "./provider";
-
 export interface VerificationConfig {
     networkType: string;
     networkConfig: string;
@@ -103,31 +100,4 @@ export interface KeyValue {
 
 export interface KeyValueState {
     getKeys(): KeyValue[];
-}
-
-export class CheckPlugin {
-    constructor(provider: BlockProvider, resultSet: ResultSet) {
-    }
-}
-
-export interface BlockCheckPlugin {
-    performCheck(blockNumber: number): Promise<void>;
-}
-
-export interface TransactionCheckPlugin {
-    performCheck(transactionID: string): Promise<void>;
-}
-
-export interface OutputPlugin {
-    convertResult(resultSet: ResultSet): Promise<Buffer>;
-}
-
-export interface AppStateCheckLogic {
-    probeStateCheck(kvState: KeyValueState): Promise<boolean>;
-    performStateCheck(kvState: KeyValueState): Promise<void>;
-}
-
-export interface AppTransactionCheckLogic {
-    probeTransactionCheck(tx: Transaction): Promise<boolean>;
-    performTransactionCheck(tx: Transaction): Promise<void>;
 }
