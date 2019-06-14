@@ -180,7 +180,7 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
                 },
                 {
                     name: "Hash(" + privateRWSet + ".RWSet)",
-                    value: FabricPrivateRWSet.calcHash(privateRWSet.getRWSetBytes())
+                    value: FabricPrivateRWSet.calcHash(privateRWSet.rwSetBytes)
                 }
             );
 
@@ -204,7 +204,7 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
                 const privWrite = privateRWSetData.rwset.writes[k];
 
                 const keyHash = FabricPrivateRWSet.calcHash(Buffer.from(privWrite.key));
-                const valueHash = FabricPrivateRWSet.calcHash(privWrite.value.toBuffer());
+                const valueHash = FabricPrivateRWSet.calcHash(privWrite.value);
 
                 this.results.addResult("checkPrivateData", ResultPredicate.EQBIN,
                     { name: format("%s.RWSet.Writes[%d].KeyHash", rwsetName, k),

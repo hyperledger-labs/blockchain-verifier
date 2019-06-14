@@ -7,8 +7,8 @@
 import { Integer, OctetString, Sequence } from "asn1js";
 import { createHash } from "crypto";
 import { decode, decodeBlock, HeaderType } from "fabric-client/lib/BlockDecoder";
-import * as grpc from "grpc";
 import * as path from "path";
+import { loadSync } from "protobufjs";
 import { format } from "util";
 import { BlockData } from "./fabric-types";
 
@@ -19,12 +19,12 @@ import { BCVerifierNotFound, BCVerifierNotImplemented, Block, HashValueType,
 //   TODO; in v2.0, should be replaced with fabric-protos library
 const PROTO_PATH = path.join(__dirname, "../../../node_modules/fabric-client/lib/protos");
 export const PROTOS = {
-    common: grpc.load<any>(path.join(PROTO_PATH, "common/common.proto")).common,
-    identities: grpc.load<any>(path.join(PROTO_PATH, "msp/identities.proto")).msp,
-    proposal: grpc.load<any>(path.join(PROTO_PATH, "peer/proposal.proto")).protos,
-    rwset: grpc.load<any>(path.join(PROTO_PATH, "ledger/rwset/rwset.proto")).rwset,
-    kvrwset: grpc.load<any>(path.join(PROTO_PATH, "ledger/rwset/kvrwset/kv_rwset.proto")).kvrwset,
-    transaction: grpc.load<any>(path.join(PROTO_PATH, "peer/transaction.proto")).protos
+    common: loadSync(path.join(PROTO_PATH, "common/common.proto")),
+    identities: loadSync(path.join(PROTO_PATH, "msp/identities.proto")),
+    proposal: loadSync(path.join(PROTO_PATH, "peer/proposal.proto")),
+    rwset: loadSync(path.join(PROTO_PATH, "ledger/rwset/rwset.proto")),
+    kvrwset: loadSync(path.join(PROTO_PATH, "ledger/rwset/kvrwset/kv_rwset.proto")),
+    transaction: loadSync(path.join(PROTO_PATH, "peer/transaction.proto"))
 };
 
 class VarBuffer {
@@ -167,17 +167,20 @@ export class FabricBlock implements Block {
         } else {
             this.block = decode(opt.data);
 
-            const protoBlock = PROTOS.common.Block.decode(opt.data);
+            const blockType = PROTOS.common.lookupType("common.Block");
+            const protoBlock = blockType.decode(opt.data) as any;
+
             const data: Buffer[] = [];
-            for (const dataProto of protoBlock.getData().getData()) {
-                data.push(dataProto.toBuffer());
+            for (const dataProto of protoBlock.data.data) {
+                data.push(dataProto);
             }
             this.rawBlock = {
-                header : { number: protoBlock.getHeader().getNumber().getLowBitsUnsigned(),
-                           previous_hash: protoBlock.getHeader().getPreviousHash().toBuffer(),
-                           data_hash: protoBlock.getHeader().getDataHash().toBuffer() },
+                // XXX: Should use long for header.number
+                header : { number: parseInt(protoBlock.header.number, 10),
+                           previous_hash: protoBlock.header.previousHash,
+                           data_hash: protoBlock.header.dataHash },
                 data : { data: data },
-                metadata : protoBlock.getMetadata()
+                metadata : protoBlock.metadata
             };
         }
 
@@ -327,9 +330,12 @@ export class FabricTransaction implements Transaction {
         this.actions = [];
 
         if (this.getTransactionType() === FabricTransactionType.ENDORSER_TRANSACTION) {
-            const payload = PROTOS.common.Payload.decode(this.getPayloadBytes());
-            const payloadData = payload.getData().toBuffer();
-            const transaction = PROTOS.transaction.Transaction.decode(payloadData);
+            const payloadType = PROTOS.common.lookupType("common.Payload");
+            const transactionType = PROTOS.transaction.lookupType("protos.Transaction");
+
+            const payload = payloadType.decode(this.getPayloadBytes()) as any;
+            const payloadData = payload.data;
+            const transaction = transactionType.decode(payloadData) as any;
 
             for (const i in transaction.actions) {
                 this.actions.push(new FabricAction(this, transaction.actions[i],
@@ -369,12 +375,9 @@ export class FabricTransaction implements Transaction {
     }
 
     public getRawEnvelope(): RawEnvelope {
-        const envelope = PROTOS.common.Envelope.decode(this.rawData);
+        const envelopeType = PROTOS.common.lookupType("common.Envelope");
 
-        return {
-            payload: envelope.getPayload().toBuffer(),
-            signature: envelope.getSignature().toBuffer()
-        };
+        return envelopeType.decode(this.rawData) as unknown as RawEnvelope;
     }
 
     public getActions(): FabricAction[] {
@@ -420,19 +423,20 @@ export class FabricAction {
         this.index = index;
         this.transaction = transaction;
 
-        this.rawPayload = PROTOS.transaction.ChaincodeActionPayload.decode(this.raw.payload);
+        const chaincodeActionPayloadType = PROTOS.transaction.lookupType("protos.ChaincodeActionPayload");
+        this.rawPayload = chaincodeActionPayloadType.decode(this.raw.payload);
     }
 
     public getProposalBytes(): Buffer {
-        return this.rawPayload.getChaincodeProposalPayload().toBuffer();
+        return this.rawPayload.chaincodeProposalPayload;
     }
     public getResponseBytes(): Buffer {
-        return this.rawPayload.getAction().proposal_response_payload.toBuffer();
+        return this.rawPayload.action.proposalResponsePayload;
     }
     public getEndorsersBytes(): Buffer[] {
         const endorsers: Buffer[] = [];
-        for (const endorsement of this.rawPayload.getAction().endorsements) {
-            endorsers.push(endorsement.endorser.toBuffer());
+        for (const endorsement of this.rawPayload.action.endorsements) {
+            endorsers.push(endorsement.endorser);
         }
         return endorsers;
     }
@@ -527,11 +531,13 @@ export class FabricPrivateRWSet {
     constructor(data: Buffer, name: string) {
         this.rawBytes = data;
 
-        const protoCol =  PROTOS.rwset.CollectionPvtReadWriteSet.decode(this.rawBytes);
-        this.rwSetBytes = protoCol.getRwset().toBuffer();
+        const protoCol = PROTOS.rwset.lookupType("rwset.CollectionPvtReadWriteSet").decode(this.rawBytes) as any;
+        this.rwSetBytes = protoCol.rwset;
 
-        this.decoded = { collection_name: protoCol.getCollectionName(),
-                         rwset: PROTOS.kvrwset.KVRWSet.decode(this.rwSetBytes) };
+        this.decoded = {
+            collection_name: protoCol.collectionName,
+            rwset: PROTOS.kvrwset.lookupType("kvrwset.KVRWSet").decode(this.rwSetBytes)
+        };
 
         this.name = name;
     }

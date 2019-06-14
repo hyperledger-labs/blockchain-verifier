@@ -50,7 +50,6 @@ export function findMSP(mspName: string, mspConfigs: MSPConfig[]): MSPConfig {
 export function verifyIdentityMSP(mspName: string, identity: string, mspConfigs: MSPConfig[]): Promise<boolean> {
     try {
         const msp = findMSP(mspName, mspConfigs);
-
         return new Promise((resolve, reject) => {
             verifySigningChain(identity, msp.root_certs, (error, result) => {
                 if (error != null) {
@@ -84,15 +83,19 @@ export function verifySignature(signature: Buffer, data: Buffer, identity: any):
 export function verifyMetadataSignature(block: FabricBlock, data: Buffer, metadataSignature: any): boolean {
     const verify = createVerify("sha256");
 
-    const creator = new PROTOS.identities.SerializedIdentity();
-    creator.setMspid(metadataSignature.signature_header.creator.Mspid);
-    creator.setIdBytes(Buffer.from(metadataSignature.signature_header.creator.IdBytes));
+    const serializedIdentityType = PROTOS.identities.lookupType("msp.SerializedIdentity");
+    const creator = serializedIdentityType.encode({
+        mspid: metadataSignature.signature_header.creator.Mspid,
+        idBytes: Buffer.from(metadataSignature.signature_header.creator.IdBytes)
+    }).finish();
 
-    const sigHeader = new PROTOS.common.SignatureHeader();
-    sigHeader.setCreator(creator.toBuffer());
-    sigHeader.setNonce(metadataSignature.signature_header.nonce);
+    const signatureHeaderType = PROTOS.common.lookupType("common.SignatureHeader");
+    const sigHeader = signatureHeaderType.encode({
+        creator: creator,
+        nonce: metadataSignature.signature_header.nonce
+    }).finish();
 
-    verify.update(Buffer.concat([data, sigHeader.toBuffer(), block.getHeaderBytes()]));
+    verify.update(Buffer.concat([data, sigHeader, block.getHeaderBytes()]));
 
     return verify.verify(metadataSignature.signature_header.creator.IdBytes, metadataSignature.signature);
 }

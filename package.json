@@ -22,8 +22,8 @@
     "@types/pem": "^1.9.5",
     "jest": "^24.5.0",
     "ts-jest": "^24.0.0",
-    "typescript": "^3.3.0",
-    "tslint": "^5.14.0"
+    "tslint": "^5.14.0",
+    "typescript": "^3.3.0"
   },
   "dependencies": {
     "asn1js": "^2.0.22",

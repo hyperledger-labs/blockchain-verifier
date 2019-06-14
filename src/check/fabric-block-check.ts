@@ -9,7 +9,7 @@
 import { BlockCheckPlugin } from ".";
 import { BCVerifierError, ResultPredicate } from "../common";
 import { FabricBlock, FabricMetaDataIndex, FabricTransaction, getOrdererMSPs,
-         MSPConfig, PROTOS, verifyMetadataSignature, verifySignatureHeader } from "../data/fabric";
+         PROTOS, verifyMetadataSignature, verifySignatureHeader } from "../data/fabric";
 import { BlockProvider } from "../provider";
 import { BlockResultPusher, ResultSet } from "../result-set";
 
@@ -47,11 +47,16 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
 
    private async checkLastConfig(block: FabricBlock): Promise<FabricTransaction> {
         const lastConfig = block.getMetaData(FabricMetaDataIndex.LAST_CONFIG);
-        const lastConfigProto = new PROTOS.common.LastConfig();
-
-        lastConfigProto.setIndex(lastConfig.value.index);
-        const lastConfigValue = lastConfigProto.toBuffer();
-        let ordererMSPs: MSPConfig[] = [];
+        const lastConfigType = PROTOS.common.lookupType("common.LastConfig");
+        // XXX: Better to use raw value due to different implementation of encoding zero
+        // https://github.com/protobufjs/protobuf.js/issues/1138
+        const lastConfigObj: { index?: number } = {};
+        // XXX: May cause issue in big number (> 53 bit)
+        const index = parseInt(lastConfig.value.index, 10);
+        if (index !== 0) {
+            lastConfigObj.index = index;
+        }
+        const lastConfigValue = lastConfigType.encode(lastConfigObj).finish();
 
         this.checkLastConfigIndex(lastConfig, block);
 
@@ -72,7 +77,7 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
             throw new BCVerifierError("config block is not FabricBlock");
         }
         const configTx = lastConfigBlock.getConfigTx();
-        ordererMSPs = getOrdererMSPs(configTx);
+        const ordererMSPs = getOrdererMSPs(configTx);
 
         for (const i in lastConfig.signatures) {
             const signature = lastConfig.signatures[i];
