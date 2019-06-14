@@ -104,7 +104,7 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
                 ResultPredicate.INVOKE,
                 { name: "VerifyMetadataSignature", value: verifyMetadataSignature },
                 { name: block.toString(), value: block },
-                { name: "None", value: Buffer.from("") },
+                { name: "None", value: Buffer.from(signatures.value) },
                 { name: block + ".Metadata[0].Signature[" + i + "]", value: signature }
             );
 
