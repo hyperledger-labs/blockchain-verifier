@@ -9,7 +9,7 @@ import level from "level";
 import * as path from "path";
 import { format } from "util";
 
-import { BCVerifierError, BCVerifierNotImplemented, Block } from "../common";
+import { BCVerifierError, BCVerifierNotImplemented } from "../common";
 import { FabricBlock } from "../data/fabric";
 import { BlockSource, NetworkPlugin } from "../network-plugin";
 
@@ -141,7 +141,7 @@ export class FabricBlockSource implements BlockSource {
         this.privateDB = privateDB;
     }
 
-    public getBlock(blockNumber: number): Promise<Block> {
+    public getBlock(blockNumber: number): Promise<FabricBlock> {
         const bi = this.blockInfo[blockNumber];
 
         if (bi == null) {
@@ -176,9 +176,9 @@ export class FabricBlockSource implements BlockSource {
     public async getBlockHeight(): Promise<number> {
         return this.blockInfo.length;
     }
-    public async getBlockRange(blockStart: number, blockEnd: number): Promise<Block[]> {
+    public async getBlockRange(blockStart: number, blockEnd: number): Promise<FabricBlock[]> {
         let b = 0;
-        const result: Block[] = [];
+        const result: FabricBlock[] = [];
         if (blockEnd < blockStart) {
             throw new BCVerifierError(format("Block range invalid (start: %d, end %d)", blockStart, blockEnd));
         }
@@ -204,7 +204,7 @@ export class FabricBlockSource implements BlockSource {
         return "file";
     }
 
-    public findBlockByTransaction(_transactionId: string): Promise<Block> {
+    public async findBlockByTransaction(_transactionId: string): Promise<FabricBlock> {
         // No special function for finding a transaction.
         // Throw a not-implemented exception to make the provider to perform a slow-path
         throw new BCVerifierNotImplemented("findBlockByTransaction is not implemented");
@@ -219,7 +219,7 @@ export default class FabricBlockPlugin implements NetworkPlugin {
         this.configSet = getConfig(configString);
     }
 
-    public async getBlockSources(): Promise<BlockSource[]> {
+    public async getBlockSources(): Promise<FabricBlockSource[]> {
         if (this.sources == null) {
             this.sources = [];
             for (const i in this.configSet) {
@@ -232,7 +232,7 @@ export default class FabricBlockPlugin implements NetworkPlugin {
         }
         return this.sources;
     }
-    public async getPreferredBlockSource(): Promise<BlockSource> {
+    public async getPreferredBlockSource(): Promise<FabricBlockSource> {
         const sources = await this.getBlockSources();
         if (sources.length === 0) {
             throw new BCVerifierError("No Block Source found");
