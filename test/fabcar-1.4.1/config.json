@@ -1,0 +1,21 @@
+{
+    "blockHeight": 6,
+    "hashes": [
+        "cff212cfe6d44c0d2f014c01bdcdc162a7aa93d8f3d43f7909f86e4197b66763",
+        "a8eb08609d031b7a8a35fa2160451a4122f855d0a1cddcceee0406a4f60558dd",
+        "24640fa844aef9ff5db91353075abcd885da612ed435f73ff8c2cf44057a1245",
+        "b4d757ceac77f2026bd1f7f73018637af19956ea19386cb92f32c08c79c73c3b",
+        "a1e1f0c1c813864eb51e600a0777db2eff8b6c4b8e929258ef64f5be164af5a2",
+        "e14d12dd9766917b261ae09dc951228e62b0b25e9b8e77ee7a999cfd07c9c2f4"
+    ],
+    "numTransactions": [
+        1, 1, 1, 1, 1, 1
+    ],
+    "ledgers": [
+        {
+            "name": "org1",
+            "ledgerStore": ".",
+            "blockFile": "./blockfile_000000"
+        }
+    ]
+}
