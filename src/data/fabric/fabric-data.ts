@@ -188,7 +188,7 @@ export class FabricBlock implements Block {
         let t = 0;
         for (const tx of this.block.data.data) {
             let validity = false;
-            if (this.block.metadata.metadata[FabricMetaDataIndex.TRANSACTION_FILTER][t]) {
+            if (this.block.metadata.metadata[FabricMetaDataIndex.TRANSACTION_FILTER][t] === 0) {
                 validity = true;
             }
 
