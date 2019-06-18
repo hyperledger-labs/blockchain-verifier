@@ -59,10 +59,12 @@ describe("FabricBlockSource", () => {
                 return;
             }
             //
-            expect(FabricBlockSource.createFromConfig({
+            const sourceWithPrivate = await FabricBlockSource.createFromConfig({
                 blockFile: path.join(dataPath, dataConfig.ledgers[0].blockFile),
                 privateDataStore: path.join(dataPath, dataConfig.ledgers[0].privateDataStore)
-            })).resolves.toBeDefined();
+            });
+            expect(sourceWithPrivate).toBeDefined();
+            await sourceWithPrivate.closePrivateDB();
         });
     }
 

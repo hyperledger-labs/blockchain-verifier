@@ -93,6 +93,22 @@ export interface Transaction {
     getKeyValueState(): Promise<KeyValueState>;
 }
 
+export interface KeyValueBlock extends Block {
+    getTransactions(): KeyValueTransaction[];
+}
+export interface KeyValueTransaction extends Transaction {
+    getWriteSet(): KeyValueWriteSet;
+}
+export interface KeyValueWriteSet {
+    writeSet: KeyValuePair[];
+    deleteSet: KeyValuePair[];
+}
+export interface KeyValuePair {
+    key: Buffer;
+    value: Buffer;
+    version: Buffer;
+}
+
 export interface KeyValue {
     getValue(blockOrTx?: Block | Transaction): Buffer;
     getHistory(): Transaction[];

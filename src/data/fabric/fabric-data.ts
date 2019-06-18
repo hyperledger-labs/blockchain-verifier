@@ -12,8 +12,8 @@ import { loadSync } from "protobufjs";
 import { format } from "util";
 import { BlockData } from "./fabric-types";
 
-import { BCVerifierNotFound, BCVerifierNotImplemented, Block, HashValueType,
-         KeyValueState, Transaction } from "../../common";
+import { BCVerifierNotFound, BCVerifierNotImplemented, HashValueType,
+         KeyValueBlock, KeyValuePair, KeyValueState, KeyValueTransaction, KeyValueWriteSet } from "../../common";
 
 // Proto buffer
 //   TODO; in v2.0, should be replaced with fabric-protos library
@@ -115,7 +115,7 @@ export enum FabricMetaDataIndex {
 
 type FabricBlockConstructorOptions = { fromFile: boolean, data: Buffer };
 
-export class FabricBlock implements Block {
+export class FabricBlock implements KeyValueBlock {
     public static fromFileBytes(bytes: Buffer) {
         return new FabricBlock({ fromFile: true, data: bytes });
     }
@@ -300,7 +300,8 @@ export enum FabricTransactionType {
     CHAINCODE_PACKAGE = 6
 }
 
-export class FabricTransaction implements Transaction {
+export class FabricTransaction implements KeyValueTransaction {
+    public static KEY_NS_SEPARATOR = Buffer.from([0x00]);
     public static getConfigTxName(blockNumber: number) {
         return format("config.%d", blockNumber);
     }
@@ -407,6 +408,40 @@ export class FabricTransaction implements Transaction {
 
     public async getKeyValueState(): Promise<KeyValueState> {
         throw new BCVerifierNotImplemented();
+    }
+
+    public getWriteSet(): KeyValueWriteSet {
+        const result: KeyValueWriteSet = { writeSet: [], deleteSet: [] };
+        if (this.getTransactionType() !== FabricTransactionType.ENDORSER_TRANSACTION) {
+            return result;
+        }
+        if (this.validity === false) {
+            return result;
+        }
+
+        for (const action of this.actions) {
+            const rws = action.getRWSets();
+            for (const rw of rws) {
+                const nsBuffer = Buffer.from(rw.namespace);
+                for (const write of rw.rwset.writes) {
+                    const pair: KeyValuePair = {
+                        key: Buffer.concat([
+                            nsBuffer, FabricTransaction.KEY_NS_SEPARATOR, Buffer.from(write.key)
+                        ]),
+                        value: Buffer.concat([
+                            Buffer.from(write.value)
+                        ]),
+                        version: Buffer.from(this.block.getBlockNumber() + "-" + this.getIndexInBlock())
+                    };
+                    if (write.is_delete) {
+                        result.deleteSet.push(pair);
+                    } else {
+                        result.writeSet.push(pair);
+                    }
+                }
+            }
+        }
+        return result;
     }
 }
 

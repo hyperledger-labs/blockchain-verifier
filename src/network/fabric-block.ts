@@ -209,6 +209,14 @@ export class FabricBlockSource implements BlockSource {
         // Throw a not-implemented exception to make the provider to perform a slow-path
         throw new BCVerifierNotImplemented("findBlockByTransaction is not implemented");
     }
+
+    public closePrivateDB(): Promise<void> {
+        if (this.privateDB) {
+            return this.privateDB.close();
+        } else {
+            return Promise.resolve();
+        }
+    }
 }
 
 export default class FabricBlockPlugin implements NetworkPlugin {
