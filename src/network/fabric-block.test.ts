@@ -7,6 +7,7 @@
 import * as path from "path";
 
 import { BCVerifierError, BCVerifierNotImplemented } from "../common";
+import { DataModelType } from "../network-plugin";
 import FabricBlockPlugin, { FabricBlockSource } from "./fabric-block";
 
 const testDataPathBase = path.join(__dirname, "..", "..", "test");
@@ -84,6 +85,8 @@ describe("FabricBlockPlugin", () => {
         // test for the first set only
         test("FabricBlockPlugin - " + dataName, async () => {
             const plugin1 = new FabricBlockPlugin(path.join(dataPath, dataConfig.ledgers[0].ledgerStore));
+            expect(plugin1.getDataModelType()).toBe(DataModelType.KeyValue);
+
             const sources = await plugin1.getBlockSources();
             expect(sources.length).toBe(1);
             const preferred = await plugin1.getPreferredBlockSource();

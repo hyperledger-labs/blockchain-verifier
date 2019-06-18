@@ -18,7 +18,14 @@ export interface BlockSource {
     findBlockByTransaction(transactionID: string): Promise<Block>;
 }
 
+export enum DataModelType {
+    Other = 0,
+    KeyValue = 1,
+    UTXO = 2
+}
+
 export interface NetworkPlugin {
     getBlockSources(): Promise<BlockSource[]>;
     getPreferredBlockSource(): Promise<BlockSource>;
+    getDataModelType(): DataModelType;
 }

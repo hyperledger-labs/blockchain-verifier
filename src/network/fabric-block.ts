@@ -11,7 +11,7 @@ import { format } from "util";
 
 import { BCVerifierError, BCVerifierNotImplemented } from "../common";
 import { FabricBlock } from "../data/fabric";
-import { BlockSource, NetworkPlugin } from "../network-plugin";
+import { BlockSource, DataModelType, NetworkPlugin } from "../network-plugin";
 
 type FabricBlockConfigSet = FabricBlockConfig[];
 
@@ -225,6 +225,10 @@ export default class FabricBlockPlugin implements NetworkPlugin {
 
     constructor(configString: string) {
         this.configSet = getConfig(configString);
+    }
+
+    public getDataModelType(): DataModelType {
+        return DataModelType.KeyValue;
     }
 
     public async getBlockSources(): Promise<FabricBlockSource[]> {

@@ -9,7 +9,7 @@ import * as fs from "fs";
 import * as util from "util";
 import { BCVerifierError } from "../common";
 import { FabricBlock } from "../data/fabric";
-import { BlockSource, NetworkPlugin } from "../network-plugin";
+import { BlockSource, DataModelType, NetworkPlugin } from "../network-plugin";
 
 type FabricQueryPluginClientConfig = {
     mspID: string;
@@ -139,6 +139,10 @@ export default class FabricQueryPlugin implements NetworkPlugin {
         if (this.pluginConfig.useDiscovery) {
             Client.setConfigSetting("initialize-with-discovery", true);
         }
+    }
+
+    public getDataModelType(): DataModelType {
+        return DataModelType.KeyValue;
     }
 
     public async getBlockSources(): Promise<BlockSource[]> {
