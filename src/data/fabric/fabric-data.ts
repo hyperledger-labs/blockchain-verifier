@@ -13,7 +13,7 @@ import { format } from "util";
 import { BlockData } from "./fabric-types";
 
 import { BCVerifierNotFound, BCVerifierNotImplemented, HashValueType,
-         KeyValueBlock, KeyValuePair, KeyValueState, KeyValueTransaction, KeyValueWriteSet } from "../../common";
+         KeyValueBlock, KeyValuePair, KeyValueState, KeyValueTransaction } from "../../common";
 
 // Proto buffer
 //   TODO; in v2.0, should be replaced with fabric-protos library
@@ -410,8 +410,8 @@ export class FabricTransaction implements KeyValueTransaction {
         throw new BCVerifierNotImplemented();
     }
 
-    public getWriteSet(): KeyValueWriteSet {
-        const result: KeyValueWriteSet = { writeSet: [], deleteSet: [] };
+    public getWriteSet(): KeyValuePair[] {
+        const result: KeyValuePair[] = [];
         if (this.getTransactionType() !== FabricTransactionType.ENDORSER_TRANSACTION) {
             return result;
         }
@@ -424,19 +424,25 @@ export class FabricTransaction implements KeyValueTransaction {
             for (const rw of rws) {
                 const nsBuffer = Buffer.from(rw.namespace);
                 for (const write of rw.rwset.writes) {
-                    const pair: KeyValuePair = {
-                        key: Buffer.concat([
-                            nsBuffer, FabricTransaction.KEY_NS_SEPARATOR, Buffer.from(write.key)
-                        ]),
-                        value: Buffer.concat([
-                            Buffer.from(write.value)
-                        ]),
-                        version: Buffer.from(this.block.getBlockNumber() + "-" + this.getIndexInBlock())
-                    };
+                    const key = Buffer.concat([
+                        nsBuffer, FabricTransaction.KEY_NS_SEPARATOR, Buffer.from(write.key)
+                    ]);
+                    const value = Buffer.from(write.value);
+                    const version = Buffer.from(this.block.getBlockNumber() + "-" + this.getIndexInBlock());
+
                     if (write.is_delete) {
-                        result.deleteSet.push(pair);
+                        result.push({
+                            key: key,
+                            version: version,
+                            isDelete: true
+                        });
                     } else {
-                        result.writeSet.push(pair);
+                        result.push({
+                            key: key,
+                            value: value,
+                            version: version,
+                            isDelete: false
+                        });
                     }
                 }
             }

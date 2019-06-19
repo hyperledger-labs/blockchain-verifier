@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BCVerifierError, BCVerifierNotImplemented, Block, Transaction } from "./common";
+import { BCVerifierError, BCVerifierNotImplemented, Block,
+         KeyValueBlock,  KeyValueState, KeyValueTransaction, Transaction } from "./common";
+import { KeyValueManager, KeyValueManagerBlockNotSufficientError, SimpleKeyValueManager } from "./kvmanager";
 import { BlockSource } from "./network-plugin";
 
 // Simple in-memory cacher
@@ -86,7 +88,7 @@ export class BlockProvider {
         }
     }
 
-    private registerTransactions(block: Block): void {
+    protected registerTransactions(block: Block): void {
         const txs = block.getTransactions();
         for (const tx of txs) {
             // Update transaction ID index
@@ -98,5 +100,44 @@ export class BlockProvider {
             }
             this.transactionTypeIndex[type].push(tx);
         }
+    }
+}
+
+export class KeyValueBlockProvider extends BlockProvider {
+    protected keyValueManager: KeyValueManager;
+
+    constructor(source: BlockSource) {
+        super(source);
+        this.keyValueManager = new SimpleKeyValueManager();
+    }
+
+    public async getKeyValueState(tx: KeyValueTransaction): Promise<KeyValueState> {
+        try {
+            return this.keyValueManager.getState(tx.getBlock() as KeyValueBlock);
+        } catch (e) {
+            if (!(e instanceof KeyValueManagerBlockNotSufficientError)) {
+                throw e;
+            }
+        }
+        // Slow path: feed sufficient blocks
+        const blockNum = tx.getBlock().getBlockNumber();
+
+        while (this.keyValueManager.getNextDesiredBlockNumber() <= blockNum) {
+            const nextBlock = this.keyValueManager.getNextDesiredBlockNumber();
+            const block = await this.getBlock(nextBlock);
+
+            this.keyValueManager.feedBlock(block as KeyValueBlock);
+        }
+
+        return this.keyValueManager.getState(tx.getBlock() as KeyValueBlock);
+    }
+
+    protected registerTransactions(block: Block): void {
+        super.registerTransactions(block);
+        this.registerKeyValue(block as KeyValueBlock);
+    }
+
+    protected registerKeyValue(block: KeyValueBlock): void {
+        this.keyValueManager.feedBlock(block);
     }
 }

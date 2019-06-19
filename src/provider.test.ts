@@ -4,13 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Block } from "./common";
+import { Block, KeyValueTransaction } from "./common";
+import { KeyValueManagerBlockNotSufficientError, SimpleKeyValueManager } from "./kvmanager";
 import { correctBlocks, MockSource } from "./mock/mock-block";
-import { BlockProvider } from "./provider";
+import { BlockProvider, KeyValueBlockProvider } from "./provider";
+
+jest.mock("./kvmanager");
 
 describe("BlockProvider", () => {
     const blockSource = new MockSource("mockSource", "mockOrg", correctBlocks);
     const blockSourceWithTx = new MockSource("mockSource", "mockOrg", correctBlocks, true);
+
+    beforeEach(() => {
+        // Casting is necessary for mocking to work with TS
+        (SimpleKeyValueManager as any).mockClear();
+    });
 
     test("Good path", async () => {
         const provider = new BlockProvider(blockSource);
@@ -83,5 +91,50 @@ describe("BlockProvider", () => {
         const provider = new BlockProvider(new StrangeSource("strange-source", "strange-org", correctBlocks));
 
         await expect(provider.getTransaction("Tx1")).rejects.toThrowError();
+    });
+
+    test("KeyValueProvider", async () => {
+        const provider = new KeyValueBlockProvider(new MockSource("mockSource", "mockOrg", correctBlocks));
+
+        expect(SimpleKeyValueManager).toHaveBeenCalledTimes(1);
+        const mockKVM: any = (SimpleKeyValueManager as any).mock.instances[0];
+
+        const b = await provider.getBlock(0);
+        expect(mockKVM.feedBlock).toHaveBeenCalledTimes(1);
+        expect(mockKVM.feedBlock).toHaveBeenCalledWith(b);
+
+        await provider.getKeyValueState(b.getTransactions()[0] as KeyValueTransaction);
+        expect(mockKVM.getState).toHaveBeenCalledTimes(1);
+        expect(mockKVM.getState).toHaveBeenCalledWith(b);
+    });
+    test("KeyValueProvider without cache", async () => {
+        const provider = new KeyValueBlockProvider(new MockSource("mockSource", "mockOrg", correctBlocks));
+        expect(SimpleKeyValueManager).toHaveBeenCalledTimes(1);
+
+        const mockKVM: any = (SimpleKeyValueManager as any).mock.instances[0];
+        mockKVM.getState.mockImplementationOnce(() => {
+            throw new KeyValueManagerBlockNotSufficientError("");
+        }).mockImplementationOnce(() => {
+            return {};
+        });
+        let feedCount = 0;
+        mockKVM.getNextDesiredBlockNumber.mockImplementation(() => feedCount);
+        mockKVM.feedBlock.mockImplementation(() => { feedCount++; });
+
+        await provider.getKeyValueState(correctBlocks[1].getTransactions()[0] as KeyValueTransaction);
+        expect(feedCount).toBe(2);
+        expect(mockKVM.getState).toHaveBeenCalledTimes(2);
+    });
+    test("KeyValueProvider getState error", async () => {
+        const provider = new KeyValueBlockProvider(new MockSource("mockSource", "mockOrg", correctBlocks));
+        expect(SimpleKeyValueManager).toHaveBeenCalledTimes(1);
+
+        const mockKVM: any = (SimpleKeyValueManager as any).mock.instances[0];
+        mockKVM.getState.mockImplementationOnce(() => {
+            throw new Error("Other error");
+        });
+
+        expect(provider.getKeyValueState(correctBlocks[1].getTransactions()[0] as KeyValueTransaction))
+              .rejects.toThrowError();
     });
 });

@@ -5,9 +5,10 @@
  */
 
 import { AppStateCheckLogic, AppTransactionCheckLogic, BlockCheckPlugin, TransactionCheckPlugin } from "./check";
-import { BCVerifierError, BCVerifierNotImplemented, Transaction, VerificationConfig } from "./common";
-import { NetworkPlugin } from "./network-plugin";
-import { BlockProvider } from "./provider";
+import { BCVerifierError, BCVerifierNotImplemented, KeyValueTransaction, Transaction,
+         VerificationConfig } from "./common";
+import { DataModelType, NetworkPlugin } from "./network-plugin";
+import { BlockProvider, KeyValueBlockProvider } from "./provider";
 import { ResultSet } from "./result-set";
 
 type PluginInfo = { pluginName: string, moduleName: string };
@@ -56,7 +57,12 @@ export class BCVerifier {
         }
 
         const blockSource = await this.network.getPreferredBlockSource();
-        const blockProvider = new BlockProvider(blockSource);
+        let blockProvider: BlockProvider;
+        if (this.network.getDataModelType() === DataModelType.KeyValue) {
+            blockProvider = new KeyValueBlockProvider(blockSource);
+        } else {
+            blockProvider = new BlockProvider(blockSource);
+        }
 
         const blockHeight = await blockSource.getBlockHeight();
         await blockProvider.cacheBlockRange(0, blockHeight - 1);
@@ -102,9 +108,11 @@ export class BCVerifier {
             }
         }
 
-        if (lastTx != null) {
+        if (lastTx != null && this.network.getDataModelType() === DataModelType.KeyValue) {
+            const kvProvider = blockProvider as KeyValueBlockProvider;
+            const lastKeyValueTx = lastTx as KeyValueTransaction;
             try {
-                const stateSet = await lastTx.getKeyValueState();
+                const stateSet = await kvProvider.getKeyValueState(lastKeyValueTx);
                 for (const v of appStateCheckers) {
                     if (await v.probeStateCheck(stateSet)) {
                         await v.performStateCheck(stateSet);

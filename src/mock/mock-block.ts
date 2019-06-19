@@ -7,10 +7,11 @@
 import { format } from "util";
 
 import { BCVerifierError, BCVerifierNotFound, BCVerifierNotImplemented, Block,
-         HashValueType, KeyValueState, Transaction } from "../common";
+         HashValueType, KeyValueBlock, KeyValuePair, KeyValueState, KeyValueTransaction, Transaction } from "../common";
 import { BlockSource } from "../network-plugin";
 
 export type TransactionIDAndType = { id: string, type: number };
+export type KVTransactionIDAndType = TransactionIDAndType & { rwset: { [key: string]: string | null } };
 
 export class MockTransaction implements Transaction {
     private transactionID: string;
@@ -145,9 +146,74 @@ export class MockSource implements BlockSource {
     }
 }
 
+export class MockKVTransaction extends MockTransaction implements KeyValueTransaction {
+    private writeSet: KeyValuePair[];
+
+    constructor(block: KeyValueBlock, transaction: KVTransactionIDAndType, index: number) {
+        super(block, transaction, index);
+
+        this.writeSet = [];
+        for (const key in transaction.rwset) {
+            const value = transaction.rwset[key];
+            if (value != null) {
+                this.writeSet.push({
+                    isDelete: false,
+                    key: Buffer.from(key),
+                    value: Buffer.from(value),
+                    version: Buffer.from(block.getBlockNumber() + "*" + index)
+                });
+            } else {
+                this.writeSet.push({
+                    isDelete: true,
+                    key: Buffer.from(key),
+                    version: Buffer.from(block.getBlockNumber() + "*" + index)
+                });
+            }
+        }
+    }
+    public getWriteSet() {
+        return this.writeSet;
+    }
+}
+
+export class MockKVBlock extends MockBlock implements KeyValueBlock {
+    private kvTransactions: KeyValueTransaction[];
+
+    constructor(num: number, hashSelf: Buffer, hashPrev: Buffer, calcHashSelf: Buffer, calcHashPrev: Buffer,
+                transactions: KVTransactionIDAndType[]) {
+        super(num, hashSelf, hashPrev, calcHashSelf, calcHashPrev, transactions);
+
+        this.kvTransactions = [];
+        for (const transaction of transactions) {
+            this.kvTransactions.push(new MockKVTransaction(
+                this, transaction, this.kvTransactions.length
+            ));
+        }
+    }
+    public getTransactions(): KeyValueTransaction[] {
+        return this.kvTransactions;
+    }
+}
+
 export const correctBlocks = [
     new MockBlock(0, Buffer.from("ABCD"), Buffer.from(""), Buffer.from("ABCD"), Buffer.from("PABCD"),
                   [ { id: "Tx1", type: 1 }, { id: "Tx2", type: 2 }]),
     new MockBlock(1, Buffer.from("XYZW"), Buffer.from("PABCD"), Buffer.from("XYZW"), Buffer.from("PABCD"),
                   [ { id: "Tx3", type: 3 }, { id: "Tx4", type: 1 }])
+];
+
+export const sampleRWSets: Array<{ [key: string]: string | null }> = [
+    { key1: "A" },
+    { key2: "1", key3: "foo" },
+    { key1: "B", key2: "3", key3: null },
+    { key1: null, key3: "bar" }
+];
+
+export const correctKVBlocks = [
+    new MockKVBlock(0, Buffer.from("ABCD"), Buffer.from(""), Buffer.from("ABCD"), Buffer.from("PABCD"),
+                  [ { id: "Tx1", type: 1, rwset: sampleRWSets[0] }, { id: "Tx2", type: 2, rwset: {} }]),
+    new MockKVBlock(1, Buffer.from("XYZW"), Buffer.from("PABCD"), Buffer.from("XYZW"), Buffer.from("PABCD"),
+                  [ { id: "Tx3", type: 3, rwset: {} }, { id: "Tx4", type: 1, rwset: sampleRWSets[1] }]),
+    new MockKVBlock(2, Buffer.from("EFGH"), Buffer.from("XYZW"), Buffer.from("EFGH"), Buffer.from("XYZW"),
+                  [ { id: "Tx5", type: 1, rwset: sampleRWSets[2] }, { id: "Tx6", type: 1, rwset: sampleRWSets[3] }]),
 ];

@@ -1,6 +1,6 @@
 import * as path from "path";
 
-import { HashValueType } from "../../common";
+import { HashValueType, KeyValuePairWrite } from "../../common";
 import { FabricBlockSource } from "../../network/fabric-block";
 import { FabricTransactionType } from "./fabric-data";
 
@@ -48,15 +48,16 @@ describe("Fabric Data", () => {
         expect(tx.validity).toBeTruthy();
 
         const set = tx.getWriteSet();
-        expect(set.deleteSet.length).toBe(0);
-        expect(set.writeSet.length).toBe(10);
-        expect(set.writeSet[0].key.toString()).toBe("fabcar\0CAR0");
-        expect(set.writeSet[9].key.toString()).toBe("fabcar\0CAR9");
+        expect(set.length).toBe(10);
+        expect(set[0].key.toString()).toBe("fabcar\0CAR0");
+        expect(set[9].key.toString()).toBe("fabcar\0CAR9");
 
-        expect(JSON.parse(set.writeSet[3].value.toString())).toEqual({
+        expect(set[3].isDelete).toBeFalsy();
+        const pair = set[3] as KeyValuePairWrite;
+        expect(JSON.parse(pair.value.toString())).toEqual({
             make: "Volkswagen", model: "Passat", colour: "yellow", owner: "Max"
         });
-        expect(set.writeSet[5].version.toString()).toBe("4-0");
+        expect(set[5].version.toString()).toBe("4-0");
     });
     test("Multiple Transactions Block (marbles:4)", async () => {
         const block = await marblesBlockSource.getBlock(4);
@@ -66,7 +67,7 @@ describe("Fabric Data", () => {
         expect(transactions.length).toBe(3);
 
         const set = transactions[2].getWriteSet();
-        expect(set.writeSet.length).toBe(0);
+        expect(set.length).toBe(0);
 
         expect(transactions[1].validity).toBeTruthy();
     });
