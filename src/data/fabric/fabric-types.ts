@@ -1,3 +1,9 @@
+/*
+ * Copyright 2019 Hitachi America, Ltd.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 export type BlockData = {
     header: {
         number: number;

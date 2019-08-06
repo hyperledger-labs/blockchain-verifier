@@ -1,3 +1,9 @@
+/*
+ * Copyright 2019 Hitachi America, Ltd.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { KeyValueState, Transaction } from "../common";
 import { BlockProvider } from "../provider";
 import { ResultSet } from "../result-set";

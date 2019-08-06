@@ -23,7 +23,7 @@ function list(val: string): string[] {
     return val.split(",");
 }
 
-commander.version("v0.1.2")
+commander.version("v0.1.3")
     .description("Blockchain Verifier CLI")
     .option("-n, --network-type <type>", "Network type")
     .option("-c, --network-config <config>", "Config for network")

@@ -207,6 +207,12 @@ The results for these checks are all "OK," which means that the integrity of the
 - Support for more plugins and platforms
   - Multiple ledger files for Hyperledger Fabric
 
+## Changes
+
+### v0.1.3 (Aug 6, 2019)
+
+- Fix check logic for signatures in the metadata
+
 ## License
 
 Apache-2.0 (See [LICENSE](LICENSE))
