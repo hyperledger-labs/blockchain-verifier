@@ -12,8 +12,8 @@ import { loadSync } from "protobufjs";
 import { format } from "util";
 import { BlockData } from "./fabric-types";
 
-import { BCVerifierNotFound, BCVerifierNotImplemented, HashValueType,
-         KeyValueBlock, KeyValuePair, KeyValueState, KeyValueTransaction } from "../../common";
+import { BCVerifierNotFound, HashValueType,
+         KeyValueBlock, KeyValuePair, KeyValuePairRead, KeyValueTransaction } from "../../common";
 
 // Proto buffer
 //   TODO; in v2.0, should be replaced with fabric-protos library
@@ -406,8 +406,33 @@ export class FabricTransaction implements KeyValueTransaction {
         }
     }
 
-    public async getKeyValueState(): Promise<KeyValueState> {
-        throw new BCVerifierNotImplemented();
+    public getReadSet(): KeyValuePairRead[] {
+        const result: KeyValuePairRead[] = [];
+        if (this.getTransactionType() !== FabricTransactionType.ENDORSER_TRANSACTION) {
+            return result;
+        }
+        if (this.validity === false) {
+            return result;
+        }
+
+        for (const action of this.actions) {
+            const rws = action.getRWSets();
+            for (const rw of rws) {
+                const nsBuffer = Buffer.from(rw.namespace);
+                for (const read of rw.rwset.reads) {
+                    const key = Buffer.concat([
+                        nsBuffer, FabricTransaction.KEY_NS_SEPARATOR, Buffer.from(read.key)
+                    ]);
+                    const version = Buffer.from(read.version.block_num + "-" + read.version.tx_num);
+                    result.push({
+                        key: key,
+                        version: version
+                    });
+                }
+            }
+        }
+
+        return result;
     }
 
     public getWriteSet(): KeyValuePair[] {

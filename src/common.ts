@@ -96,11 +96,16 @@ export interface KeyValueBlock extends Block {
     getTransactions(): KeyValueTransaction[];
 }
 export interface KeyValueTransaction extends Transaction {
+    getReadSet(): KeyValuePairRead[];
     getWriteSet(): KeyValuePair[];
 }
 
 export type KeyValuePair = KeyValuePairWrite | KeyValuePairDelete;
 
+export interface KeyValuePairRead {
+    key: Buffer;
+    version: Buffer;
+}
 export interface KeyValuePairWrite {
     isDelete: false;
     key: Buffer;

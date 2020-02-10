@@ -53,12 +53,19 @@ describe("Fabric Data", () => {
         expect(set[9].key.toString()).toBe("fabcar\0CAR9");
 
         expect(set[3].isDelete).toBeFalsy();
+
         const pair = set[3] as KeyValuePairWrite;
         expect(JSON.parse(pair.value.toString())).toEqual({
             make: "Volkswagen", model: "Passat", colour: "yellow", owner: "Max"
         });
         expect(set[5].version.toString()).toBe("4-0");
+
+        const readSet = tx.getReadSet();
+        expect(readSet.length).toBe(1);
+        expect(readSet[0].key.toString()).toBe("lscc\0fabcar");
+        expect(readSet[0].version.toString()).toBe("3-0");
     });
+
     test("Multiple Transactions Block (marbles:4)", async () => {
         const block = await marblesBlockSource.getBlock(4);
         expect(block.getBlockNumber()).toBe(4);
