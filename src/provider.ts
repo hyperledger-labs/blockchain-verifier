@@ -131,6 +131,9 @@ export class KeyValueBlockProvider extends BlockProvider {
 
         return this.keyValueManager.getState(tx.getBlock() as KeyValueBlock);
     }
+    public getAppTransaction(transactionId: string) {
+        return this.keyValueManager.getTransaction(transactionId);
+    }
 
     protected registerTransactions(block: Block): void {
         super.registerTransactions(block);

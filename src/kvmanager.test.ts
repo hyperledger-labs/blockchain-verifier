@@ -58,6 +58,34 @@ describe("SimpleKeyValueManager", () => {
         const value3 = state2.getValue(Buffer.from("key3"));
         const history3 = await value3.getHistory();
         expect(history3.length).toBe(1);
+
+        const tx1 = manager.getTransaction("Tx1");
+        const tx1WriteSet = tx1.getOutput();
+        const tx1ReadSet = tx1.getInput();
+
+        expect(tx1).not.toBeNull();
+        expect(tx1WriteSet[0].isDelete).toBeFalsy();
+        expect(tx1WriteSet[0].key.toString()).toBe("key1");
+        expect((tx1WriteSet[0] as KeyValuePairWrite).value.toString()).toBe("A");
+        expect(tx1ReadSet).toHaveLength(0);
+        expect(tx1.getState().getKeys()).toHaveLength(0);
+
+        const tx4 = manager.getTransaction("Tx4");
+        expect(tx4).not.toBeNull();
+        const tx4WriteSet = tx4.getOutput();
+        const tx4ReadSet = tx4.getInput();
+        expect(tx4WriteSet[0].isDelete).toBeFalsy();
+        expect(tx4WriteSet[0].key.toString()).toBe("key2");
+        expect((tx4WriteSet[0] as KeyValuePairWrite).value.toString()).toBe("1");
+        expect(tx4ReadSet).toHaveLength(1);
+        expect(tx4ReadSet[0].isDelete).toBeFalsy();
+        expect(tx4ReadSet[0].key.toString()).toBe("key1");
+        expect((tx4ReadSet[0] as KeyValuePairWrite).value.toString()).toBe("A");
+
+        const tx4State = tx4.getState();
+        expect(tx4State.getKeys()).toHaveLength(1);
+
+        expect(() => manager.getTransaction("NonExistent")).toThrow(BCVerifierNotFound);
     });
 
     test("error without initial state", async () => {

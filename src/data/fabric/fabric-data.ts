@@ -423,11 +423,15 @@ export class FabricTransaction implements KeyValueTransaction {
                     const key = Buffer.concat([
                         nsBuffer, FabricTransaction.KEY_NS_SEPARATOR, Buffer.from(read.key)
                     ]);
-                    const version = Buffer.from(read.version.block_num + "-" + read.version.tx_num);
-                    result.push({
-                        key: key,
-                        version: version
-                    });
+                    if (read.version == null) {
+                        // TODO: Read key has null version
+                    } else {
+                        const version = Buffer.from(read.version.block_num + "-" + read.version.tx_num);
+                        result.push({
+                            key: key,
+                            version: version
+                        });
+                    }
                 }
             }
         }

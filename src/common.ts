@@ -130,3 +130,10 @@ export interface KeyValueState {
     getKeys(): KeyValue[];
     getValue(key: Buffer): KeyValue;
 }
+
+export interface AppTransaction {
+    getInput(): KeyValuePair[];
+    getOutput(): KeyValuePair[];
+    getState(): KeyValueState;
+    getTransaction(): Transaction;
+}

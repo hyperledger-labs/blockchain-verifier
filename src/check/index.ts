@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { KeyValueState, Transaction } from "../common";
+import { AppTransaction, KeyValueState } from "../common";
 import { BlockProvider } from "../provider";
 import { ResultSet } from "../result-set";
 
@@ -32,6 +32,6 @@ export interface AppStateCheckLogic {
 }
 
 export interface AppTransactionCheckLogic {
-    probeTransactionCheck(tx: Transaction): Promise<boolean>;
-    performTransactionCheck(tx: Transaction): Promise<void>;
+    probeTransactionCheck(tx: AppTransaction): Promise<boolean>;
+    performTransactionCheck(tx: AppTransaction): Promise<void>;
 }

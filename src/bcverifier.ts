@@ -127,9 +127,10 @@ export class BCVerifier {
             for (let i = 0; i < blockHeight; i++) {
                 const b = await blockProvider.getBlock(i);
                 for (const tx of b.getTransactions()) {
+                    const appTx = kvProvider.getAppTransaction(tx.getTransactionID());
                     for (const v of appTxCheckers) {
-                        if (await v.probeTransactionCheck(tx)) {
-                            await v.performTransactionCheck(tx);
+                        if (await v.probeTransactionCheck(appTx)) {
+                            await v.performTransactionCheck(appTx);
                         }
                     }
                 }

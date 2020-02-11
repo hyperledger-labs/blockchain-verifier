@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import * as util from "util";
-import { BCVerifierError, BCVerifierNotFound, KeyValue, KeyValueBlock, KeyValuePair, KeyValuePairWrite, KeyValueState,
-         Transaction } from "./common";
+import { AppTransaction, BCVerifierError, BCVerifierNotFound, KeyValue, KeyValueBlock, KeyValuePair, KeyValuePairWrite,
+         KeyValueState, KeyValueTransaction, Transaction } from "./common";
 
 export class KeyValueManagerBlockNotSufficientError extends Error {
     // Need to feed more blocks
@@ -14,7 +14,9 @@ export interface KeyValueManager {
     getNextDesiredBlockNumber(): number;
     feedBlock(block: KeyValueBlock): boolean;
     getState(block: KeyValueBlock): SimpleKeyValueState;
+    getTransaction(tx: string | KeyValueTransaction): AppTransaction;
 }
+
 export interface KeyValueManagerInitialState {
     lastBlockNumber: number;
     keyValueState: KeyValuePairWrite[];
@@ -87,6 +89,7 @@ export class SimpleKeyValueState implements KeyValueState {
         }
         this.keyValueManager = mgr;
     }
+
     public addKeyValuePair(pair: KeyValuePairWithTx) {
         const keyName = pair.key.toString("hex");
         if (pair.isDelete) {
@@ -94,6 +97,10 @@ export class SimpleKeyValueState implements KeyValueState {
         } else {
             this.values[keyName] = pair;
         }
+    }
+
+    public getSnapshot(): SimpleKeyValueState {
+        return new SimpleKeyValueState(this.keyValueManager, this);
     }
 
     public getValue(key: Buffer): KeyValue {
@@ -113,6 +120,33 @@ export class SimpleKeyValueState implements KeyValueState {
     }
 }
 
+export class AppKeyValueTransaction implements AppTransaction {
+    protected transaction: KeyValueTransaction;
+    protected readSet: KeyValuePair[];
+    protected writeSet: KeyValuePair[];
+    protected state: SimpleKeyValueState;
+
+    public constructor(transaction: KeyValueTransaction, readSet: KeyValuePair[], writeSet: KeyValuePair[],
+                       state: SimpleKeyValueState) {
+        this.transaction = transaction;
+        this.readSet = readSet;
+        this.writeSet = writeSet;
+        this.state = state;
+    }
+    public getInput(): KeyValuePair[] {
+        return this.readSet;
+    }
+    public getOutput(): KeyValuePair[] {
+        return this.writeSet;
+    }
+    public getState(): SimpleKeyValueState {
+        return this.state;
+    }
+    public getTransaction(): KeyValueTransaction {
+        return this.transaction;
+    }
+}
+
 export class SimpleKeyValueManager implements KeyValueManager {
     protected startBlock: number;
     protected nextBlock: number;
@@ -120,6 +154,7 @@ export class SimpleKeyValueManager implements KeyValueManager {
     // Latest Key-Value and Versions
     protected keyVersions: SimpleKeyValueHistory;
     protected snapshot: { [blockNumber: number]: SimpleKeyValueState };
+    protected transactions: { [transactionId: string]: AppKeyValueTransaction };
 
     public constructor(initialState?: KeyValueManagerInitialState) {
         if (initialState != null) {
@@ -142,6 +177,7 @@ export class SimpleKeyValueManager implements KeyValueManager {
             this.keyVersions = {};
             this.snapshot = {};
         }
+        this.transactions = {};
         this.startBlock = this.nextBlock;
     }
 
@@ -172,15 +208,24 @@ export class SimpleKeyValueManager implements KeyValueManager {
         }
 
         for (const tx of block.getTransactions()) {
+            const state = newSnapshot.getSnapshot();
+
             const rSet = tx.getReadSet();
+            const readValues: KeyValuePair[] = [];
             for (const rPair of rSet) {
                 const pair = newSnapshot.getValue(rPair.key);
                 if (pair.getVersion().compare(rPair.version) !== 0) {
                     throw new BCVerifierError("Read conflict detected in a valid transaction");
                 }
+                readValues.push({
+                    ...rPair,
+                    isDelete: false,
+                    value: pair.getValue()
+                });
             }
 
             const wSet = tx.getWriteSet();
+            const writeValues: KeyValuePair[] = [];
             for (const wPair of wSet) {
                 const pair = {
                     ...wPair,
@@ -193,7 +238,11 @@ export class SimpleKeyValueManager implements KeyValueManager {
                 } else {
                     this.keyVersions[keyHex].push(pair);
                 }
+                writeValues.push(wPair);
             }
+
+            const txId = tx.getTransactionID();
+            this.transactions[txId] = new AppKeyValueTransaction(tx, readValues, writeValues, state);
         }
         this.snapshot[block.getBlockNumber()] = newSnapshot;
 
@@ -211,5 +260,16 @@ export class SimpleKeyValueManager implements KeyValueManager {
         }
         //
         return this.snapshot[block.getBlockNumber()];
+    }
+
+    public getTransaction(tx: Transaction | string): AppKeyValueTransaction {
+        const txId = typeof(tx) === "string" ? tx : tx.getTransactionID();
+        const kvtx = this.transactions[txId];
+
+        if (kvtx == null) {
+            throw new BCVerifierNotFound();
+        } else {
+            return kvtx;
+        }
     }
 }
