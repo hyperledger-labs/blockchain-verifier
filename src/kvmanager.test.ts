@@ -73,6 +73,11 @@ describe("SimpleKeyValueManager", () => {
             value: Buffer.from("1"),
             version: Buffer.from("1*1"),
             isDelete: false,
+        }, {
+            key: Buffer.from("key2"),
+            value: Buffer.from("4"),
+            version: Buffer.from("1*1"),
+            isDelete: false
         }];
 
         const manager = new SimpleKeyValueManager({
@@ -94,7 +99,7 @@ describe("SimpleKeyValueManager", () => {
         const value2 = state.getValue(Buffer.from("key2"));
         expect(value2.getValue().toString()).toBe("3");
         const history2 = await value2.getHistory();
-        expect(history2.length).toBe(1);
+        expect(history2.length).toBe(2);
     });
 
     test("error with initial state", async () => {

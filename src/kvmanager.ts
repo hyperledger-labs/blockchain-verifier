@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import * as util from "util";
-import { BCVerifierNotFound, KeyValue, KeyValueBlock, KeyValuePair, KeyValuePairWrite, KeyValueState,
+import { BCVerifierError, BCVerifierNotFound, KeyValue, KeyValueBlock, KeyValuePair, KeyValuePairWrite, KeyValueState,
          Transaction } from "./common";
 
 export class KeyValueManagerBlockNotSufficientError extends Error {
@@ -172,6 +172,14 @@ export class SimpleKeyValueManager implements KeyValueManager {
         }
 
         for (const tx of block.getTransactions()) {
+            const rSet = tx.getReadSet();
+            for (const rPair of rSet) {
+                const pair = newSnapshot.getValue(rPair.key);
+                if (pair.getVersion().compare(rPair.version) !== 0) {
+                    throw new BCVerifierError("Read conflict detected in a valid transaction");
+                }
+            }
+
             const wSet = tx.getWriteSet();
             for (const wPair of wSet) {
                 const pair = {

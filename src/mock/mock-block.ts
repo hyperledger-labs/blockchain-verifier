@@ -7,11 +7,11 @@
 import { format } from "util";
 
 import { BCVerifierError, BCVerifierNotFound, BCVerifierNotImplemented, Block,
-         HashValueType, KeyValueBlock, KeyValuePair, KeyValueState, KeyValueTransaction, Transaction } from "../common";
+         HashValueType, KeyValueBlock, KeyValuePair, KeyValueState, KeyValueTransaction, Transaction, KeyValuePairRead } from "../common";
 import { BlockSource } from "../network-plugin";
 
 export type TransactionIDAndType = { id: string, type: number };
-export type KVTransactionIDAndType = TransactionIDAndType & { rwset: { [key: string]: string | null } };
+export type KVTransactionIDAndType = TransactionIDAndType & { rwset: SampleRWSet };
 
 export class MockTransaction implements Transaction {
     private transactionID: string;
@@ -148,13 +148,24 @@ export class MockSource implements BlockSource {
 
 export class MockKVTransaction extends MockTransaction implements KeyValueTransaction {
     private writeSet: KeyValuePair[];
+    private readSet: KeyValuePairRead[];
 
     constructor(block: KeyValueBlock, transaction: KVTransactionIDAndType, index: number) {
         super(block, transaction, index);
 
+        this.readSet = [];
+        for (const key in transaction.rwset.read) {
+            const version = transaction.rwset.read[key];
+
+            this.readSet.push({
+                key: Buffer.from(key),
+                version: Buffer.from(version)
+            });
+        }
+
         this.writeSet = [];
-        for (const key in transaction.rwset) {
-            const value = transaction.rwset[key];
+        for (const key in transaction.rwset.write) {
+            const value = transaction.rwset.write[key];
             if (value != null) {
                 this.writeSet.push({
                     isDelete: false,
@@ -173,6 +184,9 @@ export class MockKVTransaction extends MockTransaction implements KeyValueTransa
     }
     public getWriteSet() {
         return this.writeSet;
+    }
+    public getReadSet() {
+        return this.readSet;
     }
 }
 
@@ -202,18 +216,24 @@ export const correctBlocks = [
                   [ { id: "Tx3", type: 3 }, { id: "Tx4", type: 1 }])
 ];
 
-export const sampleRWSets: Array<{ [key: string]: string | null }> = [
-    { key1: "A" },
-    { key2: "1", key3: "foo" },
-    { key1: "B", key2: "3", key3: null },
-    { key1: null, key3: "bar" }
+interface SampleRWSet {
+    read: { [key: string]: string };
+    write: { [key: string]: string | null };
+}
+
+export const sampleRWSets: SampleRWSet[] = [
+    { read: {}, write: {} }, // 0
+    { read: {}, write: { key1: "A" }}, // 1 (Used in 0-0)
+    { read: { key1: "0*0" }, write: { key2: "1", key3: "foo" }}, // 2 (Used in 1-1)
+    { read: { key2: "1*1" }, write: { key1: "B", key2: "3", key3: null }}, // 3 (Used in 2-0)
+    { read: { key1: "2*0" }, write: { key1: null, key3: "bar" }} // 4 (Used in 2-1)
 ];
 
 export const correctKVBlocks = [
     new MockKVBlock(0, Buffer.from("ABCD"), Buffer.from(""), Buffer.from("ABCD"), Buffer.from("PABCD"),
-                  [ { id: "Tx1", type: 1, rwset: sampleRWSets[0] }, { id: "Tx2", type: 2, rwset: {} }]),
+                  [ { id: "Tx1", type: 1, rwset: sampleRWSets[1] }, { id: "Tx2", type: 2, rwset: sampleRWSets[0] }]),
     new MockKVBlock(1, Buffer.from("XYZW"), Buffer.from("PABCD"), Buffer.from("XYZW"), Buffer.from("PABCD"),
-                  [ { id: "Tx3", type: 3, rwset: {} }, { id: "Tx4", type: 1, rwset: sampleRWSets[1] }]),
+                  [ { id: "Tx3", type: 3, rwset: sampleRWSets[0] }, { id: "Tx4", type: 1, rwset: sampleRWSets[2] }]),
     new MockKVBlock(2, Buffer.from("EFGH"), Buffer.from("XYZW"), Buffer.from("EFGH"), Buffer.from("XYZW"),
-                  [ { id: "Tx5", type: 1, rwset: sampleRWSets[2] }, { id: "Tx6", type: 1, rwset: sampleRWSets[3] }]),
+                  [ { id: "Tx5", type: 1, rwset: sampleRWSets[3] }, { id: "Tx6", type: 1, rwset: sampleRWSets[4] }]),
 ];
