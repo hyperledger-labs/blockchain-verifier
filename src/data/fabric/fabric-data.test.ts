@@ -2,7 +2,7 @@ import * as path from "path";
 
 import { HashValueType, KeyValuePairWrite } from "../../common";
 import { FabricBlockSource } from "../../network/fabric-block";
-import { FabricTransactionType } from "./fabric-data";
+import { FabricFunctionInfo, FabricTransactionType } from "./fabric-data";
 
 const testDataPathBase = path.join(__dirname, "..", "..", "..", "test");
 const testDataset: { [name: string]: string } = {
@@ -15,6 +15,7 @@ describe("Fabric Data", () => {
     let fabCarBlockSource: FabricBlockSource;
     let marblesConfig: any;
     let marblesBlockSource: FabricBlockSource;
+
     beforeAll(async () => {
         const fabCarPath = testDataset["fabcar-1.4.1"];
         fabCarConfig = require(path.join(fabCarPath, "config.json"));
@@ -47,6 +48,14 @@ describe("Fabric Data", () => {
         expect(tx.getTransactionTypeString()).toBe("ENDORSER_TRANSACTION");
         expect(tx.validity).toBeTruthy();
 
+        const actions = tx.getActions();
+        expect(actions).toHaveLength(1);
+        const funcInfo = actions[0].getFunction() as FabricFunctionInfo;
+        expect(funcInfo).not.toBeNull();
+        expect(funcInfo.ccName).toBe("fabcar");
+        expect(funcInfo.funcName.toString()).toBe("initLedger");
+        expect(funcInfo.args).toHaveLength(0);
+
         const set = tx.getWriteSet();
         expect(set.length).toBe(10);
         expect(set[0].key.toString()).toBe("fabcar\0CAR0");
@@ -78,6 +87,7 @@ describe("Fabric Data", () => {
 
         expect(transactions[1].validity).toBeTruthy();
     });
+
     test("Config Block", async () => {
         const block = await fabCarBlockSource.getBlock(0);
         const transactions = block.getTransactions();

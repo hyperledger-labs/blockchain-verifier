@@ -480,6 +480,12 @@ export class FabricTransaction implements KeyValueTransaction {
     }
 }
 
+export interface FabricFunctionInfo {
+    ccName: string;
+    funcName: Buffer;
+    args: Buffer[];
+}
+
 export class FabricAction {
     public raw: RawAction;
     public decoded: any;
@@ -526,6 +532,20 @@ export class FabricAction {
     public getRWSets(): any {
         const payload = this.getResponsePayload();
         return payload.extension.results.ns_rwset;
+    }
+    public getFunction(): FabricFunctionInfo | null {
+        const proposal = this.getProposal();
+        const args = proposal.input.chaincode_spec.input.args;
+        if (args == null || args.length <= 0) {
+            return null;
+        }
+        const ccid = proposal.input.chaincode_spec.chaincode_id;
+
+        return {
+            ccName: ccid.name,
+            funcName: args[0],
+            args: args.slice(1)
+        };
     }
     public async addPrivateData(channelName: string, privateDB: any) {
         const rwsets = this.getRWSets();
