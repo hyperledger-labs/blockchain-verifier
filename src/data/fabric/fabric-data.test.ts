@@ -65,7 +65,7 @@ describe("Fabric Data", () => {
 
         const pair = set[3] as KeyValuePairWrite;
         expect(JSON.parse(pair.value.toString())).toEqual({
-            make: "Volkswagen", model: "Passat", colour: "yellow", owner: "Max"
+            docType: "car", make: "Volkswagen", model: "Passat", color: "yellow", owner: "Max"
         });
         expect(set[5].version.toString()).toBe("4-0");
 
@@ -73,6 +73,34 @@ describe("Fabric Data", () => {
         expect(readSet.length).toBe(1);
         expect(readSet[0].key.toString()).toBe("lscc\0fabcar");
         expect(readSet[0].version.toString()).toBe("3-0");
+    });
+
+    test("Simple Transaction Block with nontrivial readset (fabcar:7)", async () => {
+        const block = await fabCarBlockSource.getBlock(7);
+        const transactions = block.getTransactions();
+        expect(transactions.length).toBe(1);
+        const tx = transactions[0];
+
+        const actions = tx.getActions();
+        expect(actions).toHaveLength(1);
+        const funcInfo = actions[0].getFunction() as FabricFunctionInfo;
+        expect(funcInfo).not.toBeNull();
+        expect(funcInfo.ccName).toBe("fabcar");
+        expect(funcInfo.funcName.toString()).toBe("changeCarOwner");
+        expect(funcInfo.args).toHaveLength(2);
+        expect(funcInfo.args[0].toString()).toBe("CAR0");
+
+        const readSet = tx.getReadSet();
+        expect(readSet.length).toBe(2);
+        expect(readSet[0].key.toString()).toBe("fabcar\0CAR0");
+        expect(readSet[0].version.toString()).toBe("4-0"); // written by initLedger (Block 4, Tx 0)
+
+        const writeSet = tx.getWriteSet();
+        expect(writeSet[0].key.toString()).toBe("fabcar\0CAR0");
+        expect(writeSet[0].isDelete).toBeFalsy();
+        expect(JSON.parse((writeSet[0] as KeyValuePairWrite).value.toString())).toEqual({
+            docType: "car", make: "Toyota", model: "Prius", color: "blue", owner: "Ai"
+        });
     });
 
     test("Multiple Transactions Block (marbles:4)", async () => {
