@@ -1,3 +1,9 @@
+/*
+ * Copyright 2019-2020 Hitachi America, Ltd.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import * as path from "path";
 
 import { HashValueType, KeyValuePairWrite } from "../../common";

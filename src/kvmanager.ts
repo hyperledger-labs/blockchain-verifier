@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Hitachi America, Ltd.
+ * Copyright 2019-2020 Hitachi America, Ltd.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -252,7 +252,7 @@ export class SimpleKeyValueManager implements KeyValueManager {
 
     public getState(block: KeyValueBlock): SimpleKeyValueState {
         if (block.getBlockNumber() >= this.nextBlock) {
-            const msg = util.format("State for block %d requested. But manager is only fed up to block %d",
+            const msg = util.format("State for block %d requested. But only the blocks up to %d are fed to the manager",
                                     block.getBlockNumber(), this.nextBlock - 1);
             throw new KeyValueManagerBlockNotSufficientError(msg);
         } else if (block.getBlockNumber() < this.startBlock) {

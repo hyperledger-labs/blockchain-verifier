@@ -32,11 +32,12 @@ Run with `-h` for the full list of the options.
 
 ### Options
 
-| Option        | Description                                                                                        |
-|---------------|----------------------------------------------------------------------------------------------------|
-| `-n (plugin)` | Specify the name of the network plugin to use                                                      |
-| `-c (config)` | Configuration passed to the network plugin. See the description for the network plugins for detail |
-| `-o (file)`   | Save the result JSON in the specified file                                                         |
+| Option          | Description                                                                                        |
+|-----------------|----------------------------------------------------------------------------------------------------|
+| `-n (plugin)`   | Specify the name of the network plugin to use                                                      |
+| `-c (config)`   | Configuration passed to the network plugin. See the description for the network plugins for detail |
+| `-o (file)`     | Save the result JSON in the specified file                                                         |
+| `-k (checkers)` | Specify the modules to use as application-specific checkers                                        |
 
 ### Commands
 
@@ -200,6 +201,14 @@ It also shows that the signature header (certificate) for the transaction `b9f33
 
 The results for these checks are all "OK," which means that the integrity of the blockchain is verified.
 
+## Application Specific Check
+
+You can write application specific check programs that are called from BCVerifier.
+The check program should export a class that implements `AppStateCheckLogic` and/or `AppTransactionCheckLogic`
+(as defined in `check/index.ts`)
+
+For detail, please refer to [the application checker reference](docs/application-checker.md).
+
 ## TODO
 
 - Documents (API reference, Data specification)
@@ -209,7 +218,11 @@ The results for these checks are all "OK," which means that the integrity of the
 
 ## Changes
 
-### v0.1.3 (Aug 6, 2019)
+### v0.2.0 (Feb. 13, 2020)
+
+- Support application specific check plugins
+
+### v0.1.3 (Aug. 6, 2019)
 
 - Fix check logic for signatures in the metadata
 
