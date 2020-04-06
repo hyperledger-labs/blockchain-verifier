@@ -5,7 +5,7 @@
  */
 
 import { BCVerifierError, Block, BlockResult, CheckResult,
-         ResultCode, ResultOperand, ResultPredicate, Transaction, TransactionResult } from "./common";
+         ResultCode, ResultOperand, ResultPredicate, StateResult, Transaction, TransactionResult } from "./common";
 
 function evaluate(predicate: ResultPredicate, values: ResultOperand[]): boolean {
     const v = values[0];
@@ -197,6 +197,7 @@ export type CheckSummary = {
     blockChecks: CheckCount;
     transactions: CheckCount;
     transactionChecks: CheckCount;
+    stateChecks: CheckCount;
 
     blockRange: { start: number, end: number };
 };
@@ -204,10 +205,14 @@ export type CheckSummary = {
 export class ResultSet {
     private blocks: { [blockNumber: number]: BlockResult };
     private transactions: { [transactionID: string]: TransactionResult };
+    private state: StateResult;
 
     constructor() {
         this.blocks = {};
         this.transactions = {};
+        this.state = {
+            results: []
+        };
     }
 
     public getBlockResults(): BlockResult[] {
@@ -266,6 +271,10 @@ export class ResultSet {
         t.results.push(result);
     }
 
+    public pushStateResult(result: CheckResult): void {
+        this.state.results.push(result);
+    }
+
     public getSummary(): CheckSummary {
         let minBlock: number | null = null;
         let maxBlock: number | null = null;
@@ -317,12 +326,14 @@ export class ResultSet {
         if (maxBlock == null) {
             maxBlock = -1;
         }
+        const stateCount = this.countChecks(this.state.results);
 
         return {
             blocks: blockCount,
             blockChecks: blockChecksCount,
             transactions: txCount,
             transactionChecks: txChecksCount,
+            stateChecks: stateCount,
 
             blockRange: { start: minBlock, end: maxBlock }
         };

@@ -56,6 +56,10 @@ export interface TransactionResult {
     results: CheckResult[];
 }
 
+export interface StateResult {
+    results: CheckResult[];
+}
+
 export interface VerificationResult {
     blocks: BlockResult[];
     transactions: TransactionResult[];
