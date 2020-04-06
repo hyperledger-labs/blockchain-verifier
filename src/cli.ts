@@ -100,7 +100,7 @@ async function start(): Promise<number> {
     console.log("  Checks performed: %d (%d transactions)",
                 resultSummary.transactionChecks.total, resultSummary.transactions.total);
     console.log("  Checks passed:    %d (%d transactions)",
-                resultSummary.transactionChecks.total, resultSummary.transactions.total);
+                resultSummary.transactionChecks.passed, resultSummary.transactions.passed);
     console.log("  Checks failed:    %d (%d transactions)",
                 resultSummary.transactionChecks.failed, resultSummary.transactions.failed);
     console.log("");
