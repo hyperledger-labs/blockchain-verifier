@@ -95,6 +95,7 @@ async function start(): Promise<number> {
     console.log("  Checks performed: %d (%d blocks)", resultSummary.blockChecks.total, resultSummary.blocks.total);
     console.log("  Checks passed:    %d (%d blocks)", resultSummary.blockChecks.passed, resultSummary.blocks.passed);
     console.log("  Checks failed:    %d (%d blocks)", resultSummary.blockChecks.failed, resultSummary.blocks.failed);
+    console.log("  Checks skipped:   %d            ", resultSummary.blockChecks.skipped);
     console.log("");
     console.log("Transactions:");
     console.log("  Checks performed: %d (%d transactions)",
@@ -103,6 +104,7 @@ async function start(): Promise<number> {
                 resultSummary.transactionChecks.passed, resultSummary.transactions.passed);
     console.log("  Checks failed:    %d (%d transactions)",
                 resultSummary.transactionChecks.failed, resultSummary.transactions.failed);
+    console.log("  Checks skipped:   %d                  ", resultSummary.transactionChecks.skipped);
     console.log("");
 
     if (resultSummary.blockChecks.failed === 0 && resultSummary.transactionChecks.failed === 0) {
