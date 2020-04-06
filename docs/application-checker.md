@@ -42,6 +42,7 @@ The checker can check if the state is really for the expected applications.
 
 The `performStateCheck` method is called to perform the checks.
 The only argument is the latest state that consists of all the keys and values at the latest point.
+The results should be registered to `resultSet`.
 
 ## Transaction Checker
 
@@ -50,13 +51,14 @@ The second type is checkers for transactions. Checkers of this type should imple
 ```typescript
 export interface AppTransactionCheckLogic {
     probeTransactionCheck(tx: AppTransaction): Promise<boolean>;
-    performTransactionCheck(tx: AppTransaction): Promise<void>;
+    performTransactionCheck(tx: AppTransaction, resultSet: ResultSet): Promise<void>;
 }
 ```
 
 Like the interface for state checkers, the `probeTransactionCheck` method is called to determine if the checker is willing to inspect the transaction.
 The `performTransactionCheck` method is called to perform the checks.
 The methods are called for each transaction, first `probeTransactionCheck` then `performTransactionCheck`.
+The results should be registered to `resultSet`.
 
 ## Classes
 
@@ -117,6 +119,48 @@ The read/write set is an array of `KeyValuePair` objects, which include the key,
 and a flag (`isDelete`) that indicates whether it is delete (*true*) or write (*false*).
 The `getTransaction` method returns the low-level transaction object.
 
+### ResultSet
+
+An instance of the `ResultSet` class contains results. Its key methods are as follows:
+
+```typescript
+export class ResultSet {
+    ...
+    public pushTransactionResult(transaction: Transaction, result: CheckResult): void;
+    public pushStateResult(result: CheckResult): void;
+    ...
+}
+```
+
+A transaction checker should call `pushTransactionResult` for every check it performs for each transaction while a state checker should call `pushStateResult`.
+
+The `CheckResult` interface is defined as:
+
+```typescript
+export type CheckResult = {
+    checkerID: string;
+    result: ResultCode.OK | ResultCode.ERROR;
+    predicate: ResultPredicate;
+    operands: ResultOperand[];
+} | {
+    checkerID: string;
+    result: ResultCode.SKIPPED;
+    skipReason: string;
+};
+```
+
+An example for a result, which means that a check if two operands are equal is successful.
+
+```typescript
+{
+    checkerID: CHECKER_ID,
+    result: ResultCode.OK,
+    predicate: ResultPredicate.EQ,
+    operands: [ { name: fabricTx.toString() + ".WriteSet.length", value: values.length },
+                { name: "1", value: 1 } ]
+}
+```
+
 ### How to execute
 
 Run CLI with the `-k` option.
@@ -140,9 +184,37 @@ ERROR: CreateCar should not overwrite the existing car
 INFO: Transaction f0d88ed25bf0456d921d733d514a3aa566a4d7792f8cd0f20f6296b6ca3c5757: changeCarOwner is ok
 ```
 
-In the future, these messages will be integrated into the other checks performed by `bcverifier`.
+And the summary shows:
+
+```
+Checked by fabric-block
+  Config: test/fabcar-1.4.1/blockfile_000000
+
+Blocks:
+  Block Range: Block 0 to Block 7
+
+  Checks performed: 38 (8 blocks)
+  Checks passed:    38 (8 blocks)
+  Checks failed:    0 (0 blocks)
+  Checks skipped:   0
+
+Transactions:
+  Checks performed: 58 (8 transactions)
+  Checks passed:    54 (7 transactions)
+  Checks failed:    1 (1 transactions)
+  Checks skipped:   3
+
+States:
+  Checks performed: 0
+  Checks passed:    0
+  Checks failed:    0
+  Checks skipped:   0
+
+Some checks failed.
+```
+
+One failure is recorded for the transaction check.
 
 ### TODO/Limitation
 
-- The result from the application checker is not aggregated to the other checks.
 - Only the key-value data model is assumed and supported.
