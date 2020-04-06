@@ -28,10 +28,10 @@ export interface TransactionCheckPlugin {
 
 export interface AppStateCheckLogic {
     probeStateCheck(kvState: KeyValueState): Promise<boolean>;
-    performStateCheck(kvState: KeyValueState): Promise<void>;
+    performStateCheck(kvState: KeyValueState, resultSet: ResultSet): Promise<void>;
 }
 
 export interface AppTransactionCheckLogic {
     probeTransactionCheck(tx: AppTransaction): Promise<boolean>;
-    performTransactionCheck(tx: AppTransaction): Promise<void>;
+    performTransactionCheck(tx: AppTransaction, resultSet: ResultSet): Promise<void>;
 }

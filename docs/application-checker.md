@@ -33,7 +33,7 @@ The first type of checkers is for data. Checkers of this type should implement t
 ```typescript
 export interface AppStateCheckLogic {
     probeStateCheck(kvState: KeyValueState): Promise<boolean>;
-    performStateCheck(kvState: KeyValueState): Promise<void>;
+    performStateCheck(kvState: KeyValueState, resultSet: ResultSet): Promise<void>;
 }
 ```
 
