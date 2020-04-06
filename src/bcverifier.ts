@@ -115,7 +115,7 @@ export class BCVerifier {
                 const stateSet = await kvProvider.getKeyValueState(lastKeyValueTx);
                 for (const v of appStateCheckers) {
                     if (await v.probeStateCheck(stateSet)) {
-                        await v.performStateCheck(stateSet);
+                        await v.performStateCheck(stateSet, this.resultSet);
                     }
                 }
             } catch (e) {
@@ -130,7 +130,7 @@ export class BCVerifier {
                     const appTx = kvProvider.getAppTransaction(tx.getTransactionID());
                     for (const v of appTxCheckers) {
                         if (await v.probeTransactionCheck(appTx)) {
-                            await v.performTransactionCheck(appTx);
+                            await v.performTransactionCheck(appTx, this.resultSet);
                         }
                     }
                 }
