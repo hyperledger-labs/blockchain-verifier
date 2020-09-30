@@ -16,23 +16,23 @@
   "author": "Taku Shimosawa <taku.shimosawa@hal.hitachi.com>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/asn1js": "0.0.1",
-    "@types/jest": "^24.0.11",
-    "@types/node": "^10.14.1",
+    "@types/asn1js": "0.0.2",
+    "@types/jest": "^26.0.14",
+    "@types/node": "^14.11.2",
     "@types/pem": "^1.9.5",
-    "jest": "^24.5.0",
-    "ts-jest": "^24.0.0",
-    "tslint": "^5.14.0",
-    "typescript": "^3.3.0"
+    "jest": "^26.4.2",
+    "ts-jest": "^26.4.1",
+    "tslint": "^5.20.1",
+    "typescript": "^4.0.3"
   },
   "dependencies": {
-    "asn1js": "^2.0.22",
-    "commander": "^2.19.0",
-    "fabric-ca-client": "^1.4.0",
-    "fabric-client": "^1.4.0",
-    "level": "^4.0.0",
-    "pem": "^1.14.2",
-    "protobufjs": "^6.8.8"
+    "asn1js": "^2.0.26",
+    "commander": "^6.1.0",
+    "fabric-ca-client": "^2.2.2",
+    "fabric-client": "^1.4.13",
+    "level": "^6.0.1",
+    "pem": "^1.14.4",
+    "protobufjs": "^6.10.1"
   },
   "jest": {
     "transform": {
