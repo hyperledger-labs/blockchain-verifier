@@ -5,9 +5,10 @@
  */
 
 import { createVerify } from "crypto";
+import { common, msp } from "fabric-protos";
 import { verifySigningChain } from "pem";
 import { BCVerifierNotFound } from "../../common";
-import { FabricBlock, FabricTransaction, PROTOS } from "./fabric-data";
+import { FabricBlock, FabricTransaction } from "./fabric-data";
 import { MSPConfig } from "./fabric-types";
 
 export function getOrdererMSPs(configTx: FabricTransaction): MSPConfig[] {
@@ -39,9 +40,9 @@ export function getApplicationMSPs(configTx: FabricTransaction): MSPConfig[] {
 }
 
 export function findMSP(mspName: string, mspConfigs: MSPConfig[]): MSPConfig {
-    for (const msp of mspConfigs) {
-        if (msp.name === mspName) {
-            return msp;
+    for (const config of mspConfigs) {
+        if (config.name === mspName) {
+            return config;
         }
     }
     throw new BCVerifierNotFound();
@@ -49,9 +50,9 @@ export function findMSP(mspName: string, mspConfigs: MSPConfig[]): MSPConfig {
 
 export function verifyIdentityMSP(mspName: string, identity: string, mspConfigs: MSPConfig[]): Promise<boolean> {
     try {
-        const msp = findMSP(mspName, mspConfigs);
+        const config = findMSP(mspName, mspConfigs);
         return new Promise((resolve, reject) => {
-            verifySigningChain(identity, msp.root_certs, (error, result) => {
+            verifySigningChain(identity, config.root_certs, (error, result) => {
                 if (error != null) {
                     reject(error);
                 } else {
@@ -83,14 +84,12 @@ export function verifySignature(signature: Buffer, data: Buffer, identity: any):
 export function verifyMetadataSignature(block: FabricBlock, data: Buffer, metadataSignature: any): boolean {
     const verify = createVerify("sha256");
 
-    const serializedIdentityType = PROTOS.identities.lookupType("msp.SerializedIdentity");
-    const creator = serializedIdentityType.encode({
+    const creator = msp.SerializedIdentity.encode({
         mspid: metadataSignature.signature_header.creator.Mspid,
-        idBytes: Buffer.from(metadataSignature.signature_header.creator.IdBytes)
+        id_bytes: Buffer.from(metadataSignature.signature_header.creator.IdBytes)
     }).finish();
 
-    const signatureHeaderType = PROTOS.common.lookupType("common.SignatureHeader");
-    const sigHeader = signatureHeaderType.encode({
+    const sigHeader = common.SignatureHeader.encode({
         creator: creator,
         nonce: metadataSignature.signature_header.nonce
     }).finish();

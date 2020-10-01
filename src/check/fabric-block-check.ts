@@ -1,15 +1,15 @@
 /*
  * Fabric block integrity check
  *
- * Copyright 2018 Hitachi America, Ltd.
+ * Copyright 2018-2020 Hitachi America, Ltd.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
+import { common } from "fabric-protos";
 import { BlockCheckPlugin } from ".";
 import { BCVerifierError, ResultPredicate } from "../common";
 import { FabricBlock, FabricMetaDataIndex, FabricTransaction, getOrdererMSPs,
-         PROTOS, verifyMetadataSignature, verifySignatureHeader } from "../data/fabric";
+         verifyMetadataSignature, verifySignatureHeader } from "../data/fabric";
 import { BlockProvider } from "../provider";
 import { BlockResultPusher, ResultSet } from "../result-set";
 
@@ -47,7 +47,6 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
 
    private async checkLastConfig(block: FabricBlock): Promise<FabricTransaction> {
         const lastConfig = block.getMetaData(FabricMetaDataIndex.LAST_CONFIG);
-        const lastConfigType = PROTOS.common.lookupType("common.LastConfig");
         // XXX: Better to use raw value due to different implementation of encoding zero
         // https://github.com/protobufjs/protobuf.js/issues/1138
         const lastConfigObj: { index?: number } = {};
@@ -56,7 +55,7 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
         if (index !== 0) {
             lastConfigObj.index = index;
         }
-        const lastConfigValue = lastConfigType.encode(lastConfigObj).finish();
+        const lastConfigValue = common.LastConfig.encode(lastConfigObj).finish();
 
         this.checkLastConfigIndex(lastConfig, block);
 
