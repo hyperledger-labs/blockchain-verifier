@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {  } from "fabric-client/lib/BlockDecoder";
 import { format } from "util";
 
 import { TransactionCheckPlugin } from ".";

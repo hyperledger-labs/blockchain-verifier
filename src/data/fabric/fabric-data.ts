@@ -1,31 +1,20 @@
 /*
- * Copyright 2018 Hitachi America, Ltd.
+ * Copyright 2018-2020 Hitachi America, Ltd.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { Integer, OctetString, Sequence } from "asn1js";
 import { createHash } from "crypto";
-import { decode, decodeBlock, HeaderType } from "fabric-client/lib/BlockDecoder";
-import * as path from "path";
-import { loadSync } from "protobufjs";
+import { decode, decodeBlock } from "fabric-client/lib/BlockDecoder";
 import { format } from "util";
 import { BlockData } from "./fabric-types";
 
-import { BCVerifierNotFound, HashValueType,
+import { BCVerifierError, BCVerifierNotFound, HashValueType,
          KeyValueBlock, KeyValuePair, KeyValuePairRead, KeyValueTransaction } from "../../common";
 
 // Proto buffer
-//   TODO; in v2.0, should be replaced with fabric-protos library
-const PROTO_PATH = path.join(__dirname, "../../../node_modules/fabric-client/lib/protos");
-export const PROTOS = {
-    common: loadSync(path.join(PROTO_PATH, "common/common.proto")),
-    identities: loadSync(path.join(PROTO_PATH, "msp/identities.proto")),
-    proposal: loadSync(path.join(PROTO_PATH, "peer/proposal.proto")),
-    rwset: loadSync(path.join(PROTO_PATH, "ledger/rwset/rwset.proto")),
-    kvrwset: loadSync(path.join(PROTO_PATH, "ledger/rwset/kvrwset/kv_rwset.proto")),
-    transaction: loadSync(path.join(PROTO_PATH, "peer/transaction.proto"))
-};
+import { common, kvrwset, protos, rwset } from "fabric-protos";
 
 class VarBuffer {
     private buffer: Buffer;
@@ -167,20 +156,31 @@ export class FabricBlock implements KeyValueBlock {
         } else {
             this.block = decode(opt.data);
 
-            const blockType = PROTOS.common.lookupType("common.Block");
-            const protoBlock = blockType.decode(opt.data) as any;
+            const protoBlock = common.Block.decode(opt.data);
+            if (protoBlock.data == null || protoBlock.data.data == null || protoBlock.header == null
+                || protoBlock.metadata == null || protoBlock.metadata.metadata == null) {
+                throw new BCVerifierError("Missing mandatory field in a block");
+            }
+            if (protoBlock.header.number == null || protoBlock.header.previous_hash == null
+                || protoBlock.header.data_hash == null) {
+                throw new BCVerifierError("Missing mandatory field in a block header");
+            }
 
             const data: Buffer[] = [];
             for (const dataProto of protoBlock.data.data) {
-                data.push(dataProto);
+                data.push(Buffer.from(dataProto));
             }
+
+            // XXX: Should use long for header.number
+            const number = typeof(protoBlock.header.number) === "number" ? protoBlock.header.number
+                        : protoBlock.header.number.toNumber();
+
             this.rawBlock = {
-                // XXX: Should use long for header.number
-                header : { number: parseInt(protoBlock.header.number, 10),
-                           previous_hash: protoBlock.header.previousHash,
-                           data_hash: protoBlock.header.dataHash },
+                header : { number: number,
+                           previous_hash: Buffer.from(protoBlock.header.previous_hash),
+                           data_hash: Buffer.from(protoBlock.header.data_hash) },
                 data : { data: data },
-                metadata : protoBlock.metadata
+                metadata : { metadata: protoBlock.metadata.metadata.map((u) => Buffer.from(u)) }
             };
         }
 
@@ -331,15 +331,20 @@ export class FabricTransaction implements KeyValueTransaction {
         this.actions = [];
 
         if (this.getTransactionType() === FabricTransactionType.ENDORSER_TRANSACTION) {
-            const payloadType = PROTOS.common.lookupType("common.Payload");
-            const transactionType = PROTOS.transaction.lookupType("protos.Transaction");
-
-            const payload = payloadType.decode(this.getPayloadBytes()) as any;
-            const payloadData = payload.data;
-            const transaction = transactionType.decode(payloadData) as any;
+            const payload = common.Payload.decode(this.getPayloadBytes());
+            const transaction = protos.Transaction.decode(payload.data);
 
             for (const i in transaction.actions) {
-                this.actions.push(new FabricAction(this, transaction.actions[i],
+                const action = transaction.actions[i];
+                if (action.header == null || action.payload == null) {
+                    throw new BCVerifierError("Missing mandatory fields in an action");
+                }
+                const rawAction = {
+                    header: Buffer.from(action.header),
+                    payload: Buffer.from(action.payload)
+                };
+
+                this.actions.push(new FabricAction(this, rawAction,
                                                    this.data.actions[i], parseInt(i, 10)));
             }
         }
@@ -372,13 +377,15 @@ export class FabricTransaction implements KeyValueTransaction {
     }
 
     public getTransactionTypeString(): string {
-        return HeaderType.convertToString(this.getTransactionType());
+        return common.HeaderType[this.getTransactionType()];
     }
 
     public getRawEnvelope(): RawEnvelope {
-        const envelopeType = PROTOS.common.lookupType("common.Envelope");
-
-        return envelopeType.decode(this.rawData) as unknown as RawEnvelope;
+        const envelope = common.Envelope.decode(this.rawData);
+        return {
+            payload: Buffer.from(envelope.payload),
+            signature: Buffer.from(envelope.signature)
+        };
     }
 
     public getActions(): FabricAction[] {
@@ -489,7 +496,7 @@ export interface FabricFunctionInfo {
 export class FabricAction {
     public raw: RawAction;
     public decoded: any;
-    public rawPayload: any;
+    public rawPayload: protos.ChaincodeActionPayload;
     public index: number;
     public transaction: FabricTransaction;
 
@@ -499,20 +506,31 @@ export class FabricAction {
         this.index = index;
         this.transaction = transaction;
 
-        const chaincodeActionPayloadType = PROTOS.transaction.lookupType("protos.ChaincodeActionPayload");
-        this.rawPayload = chaincodeActionPayloadType.decode(this.raw.payload);
+        this.rawPayload = protos.ChaincodeActionPayload.decode(this.raw.payload);
     }
 
     public getProposalBytes(): Buffer {
-        return this.rawPayload.chaincodeProposalPayload;
+        return Buffer.from(this.rawPayload.chaincode_proposal_payload);
     }
     public getResponseBytes(): Buffer {
-        return this.rawPayload.action.proposalResponsePayload;
+        if (this.rawPayload.action == null || this.rawPayload.action.proposal_response_payload == null) {
+            throw new BCVerifierError("Response is missing in an action payload");
+        }
+
+        return Buffer.from(this.rawPayload.action.proposal_response_payload);
     }
     public getEndorsersBytes(): Buffer[] {
+        if (this.rawPayload.action == null || this.rawPayload.action.endorsements == null) {
+            throw new BCVerifierError("Endorsement is missing in an action payload");
+        }
+
         const endorsers: Buffer[] = [];
+
         for (const endorsement of this.rawPayload.action.endorsements) {
-            endorsers.push(endorsement.endorser);
+            if (endorsement.endorser == null) {
+                throw new BCVerifierError("Endorser is missing in an endorsement");
+            }
+            endorsers.push(Buffer.from(endorsement.endorser));
         }
         return endorsers;
     }
@@ -550,18 +568,18 @@ export class FabricAction {
     public async addPrivateData(channelName: string, privateDB: any) {
         const rwsets = this.getRWSets();
 
-        for (const rwset of rwsets) {
-            if (rwset.collection_hashed_rwset != null) {
-                const namespace = rwset.namespace;
+        for (const set of rwsets) {
+            if (set.collection_hashed_rwset != null) {
+                const namespace = set.namespace;
                 const privateRWSets: Array<FabricPrivateRWSet | null> = [];
-                for (const hashedRWSet of rwset.collection_hashed_rwset) {
+                for (const hashedRWSet of set.collection_hashed_rwset) {
                     const collection = hashedRWSet.collection_name;
                     const privateRWSet =
                         await FabricPrivateRWSet.queryPrivateStore(privateDB, channelName, this.transaction,
                                                                    namespace, collection);
                     privateRWSets.push(privateRWSet);
                 }
-                rwset.private_rwset = privateRWSets;
+                set.private_rwset = privateRWSets;
             }
         }
     }
@@ -621,12 +639,12 @@ export class FabricPrivateRWSet {
     constructor(data: Buffer, name: string) {
         this.rawBytes = data;
 
-        const protoCol = PROTOS.rwset.lookupType("rwset.CollectionPvtReadWriteSet").decode(this.rawBytes) as any;
-        this.rwSetBytes = protoCol.rwset;
+        const protoCol = rwset.CollectionPvtReadWriteSet.decode(this.rawBytes);
+        this.rwSetBytes = Buffer.from(protoCol.rwset);
 
         this.decoded = {
-            collection_name: protoCol.collectionName,
-            rwset: PROTOS.kvrwset.lookupType("kvrwset.KVRWSet").decode(this.rwSetBytes)
+            collection_name: protoCol.collection_name,
+            rwset: kvrwset.KVRWSet.decode(this.rwSetBytes)
         };
 
         this.name = name;
