@@ -69,7 +69,7 @@ export function verifyIdentityMSP(mspName: string, identity: string, mspConfigs:
 }
 
 export async function verifySignatureHeader(signatureHeader: any, mspConfigs: MSPConfig[]): Promise<boolean> {
-    return await verifyIdentityMSP(signatureHeader.creator.Mspid, signatureHeader.creator.IdBytes, mspConfigs);
+    return await verifyIdentityMSP(signatureHeader.creator.mspid, signatureHeader.creator.id_bytes, mspConfigs);
 }
 
 export function verifySignature(signature: Buffer, data: Buffer, identity: any): boolean {
@@ -78,15 +78,15 @@ export function verifySignature(signature: Buffer, data: Buffer, identity: any):
 
     verify.update(data);
 
-    return verify.verify(identity.IdBytes, signature);
+    return verify.verify(identity.id_bytes, signature);
 }
 
 export function verifyMetadataSignature(block: FabricBlock, data: Buffer, metadataSignature: any): boolean {
     const verify = createVerify("sha256");
 
     const creator = msp.SerializedIdentity.encode({
-        mspid: metadataSignature.signature_header.creator.Mspid,
-        id_bytes: Buffer.from(metadataSignature.signature_header.creator.IdBytes)
+        mspid: metadataSignature.signature_header.creator.mspid,
+        id_bytes: Buffer.from(metadataSignature.signature_header.creator.id_bytes)
     }).finish();
 
     const sigHeader = common.SignatureHeader.encode({
@@ -96,5 +96,5 @@ export function verifyMetadataSignature(block: FabricBlock, data: Buffer, metada
 
     verify.update(Buffer.concat([data, sigHeader, block.getHeaderBytes()]));
 
-    return verify.verify(metadataSignature.signature_header.creator.IdBytes, metadataSignature.signature);
+    return verify.verify(metadataSignature.signature_header.creator.id_bytes, metadataSignature.signature);
 }
