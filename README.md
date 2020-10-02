@@ -7,10 +7,11 @@ The goal of this tool is to verify the integrity of blockchain blocks and transa
 ## Supported Blockchain Platforms
 
 - Hyperledger Fabric v1.4
+- Hyperledger Fabric v2.2
 
-## Prerequisite
+## Prerequisites
 
-- Node.js >= v8
+- Node.js >= v10.15
 
 ## Install
 
@@ -55,10 +56,10 @@ Runs verification against a Hyperledger Fabric ledger file `/tmp/block/blockfile
 
 ## Network plugins
 
-| Name           | Supported Platform      | Description                         | Config value (`-c` option)             |
-|----------------|-------------------------|-------------------------------------|----------------------------------------|
-| `fabric-block` | Hyperledger Fabric v1.4 | Verify a ledger file and private DB | Path to the ledger file or config JSON |
-| `fabric-query` | Hyperledger Fabric v1.4 | Verify blocks by querying to a peer | Path to the query config file          |
+| Name           | Supported Platform          | Description                         | Config value (`-c` option)             |
+|----------------|-----------------------------|-------------------------------------|----------------------------------------|
+| `fabric-block` | Hyperledger Fabric v1.4/2.2 | Verify a ledger file and private DB | Path to the ledger file or config JSON |
+| `fabric-query` | Hyperledger Fabric v1.4     | Verify blocks by querying to a peer | Path to the query config file          |
 
 ### fabric-block
 
@@ -217,6 +218,10 @@ For detail, please refer to [the application checker reference](docs/application
   - Multiple ledger files for Hyperledger Fabric
 
 ## Changes
+
+### v0.2.1 (Oct. 1, 2020)
+
+- Most of the Fabric-related plugins are switched to use fabric-sdk-node v2.2
 
 ### v0.2.0 (Feb. 13, 2020)
 
