@@ -38,10 +38,10 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
         await this.checkMetadataSignature(block, configTx);
     }
 
-    private checkLastConfigIndex(lastConfig: any, block: FabricBlock): void {
+    private checkLastConfigIndex(index: number, block: FabricBlock): void {
         this.results.addResult("checkLastConfigIndex",
             ResultPredicate.LE,
-            { name: block + ".Metadata[1].LastConfig.Value", value: lastConfig.value.index },
+            { name: block + ".Metadata[1].LastConfig.Value", value: index },
             { name: block + ".Number", value: block.getBlockNumber() });
     }
 
@@ -51,13 +51,13 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
         // https://github.com/protobufjs/protobuf.js/issues/1138
         const lastConfigObj: { index?: number } = {};
         // XXX: May cause issue in big number (> 53 bit)
-        const index = parseInt(lastConfig.value.index, 10);
+        const index = lastConfig.value?.index == null ? 0 : parseInt(lastConfig.value.index, 10);
         if (index !== 0) {
             lastConfigObj.index = index;
         }
         const lastConfigValue = common.LastConfig.encode(lastConfigObj).finish();
 
-        this.checkLastConfigIndex(lastConfig, block);
+        this.checkLastConfigIndex(index, block);
 
         for (const i in lastConfig.signatures) {
             const signature = lastConfig.signatures[i];
@@ -71,7 +71,7 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
             );
         }
 
-        const lastConfigBlock = await this.provider.getBlock(lastConfig.value.index);
+        const lastConfigBlock = await this.provider.getBlock(index);
         if (!(lastConfigBlock instanceof FabricBlock)) {
             throw new BCVerifierError("config block is not FabricBlock");
         }

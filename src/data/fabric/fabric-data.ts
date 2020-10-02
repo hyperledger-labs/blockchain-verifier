@@ -6,7 +6,7 @@
 
 import { Integer, OctetString, Sequence } from "asn1js";
 import { createHash } from "crypto";
-import { decode, decodeBlock } from "fabric-client/lib/BlockDecoder";
+import BlockDecoder from "fabric-common/lib/BlockDecoder";
 import { format } from "util";
 import { BlockData } from "./fabric-types";
 
@@ -152,9 +152,9 @@ export class FabricBlock implements KeyValueBlock {
             };
             this.rawBlock = blockObj;
 
-            this.block = decodeBlock(blockObj);
+            this.block = BlockDecoder.decodeBlock(blockObj);
         } else {
-            this.block = decode(opt.data);
+            this.block = BlockDecoder.decode(opt.data);
 
             const protoBlock = common.Block.decode(opt.data);
             if (protoBlock.data == null || protoBlock.data.data == null || protoBlock.header == null
