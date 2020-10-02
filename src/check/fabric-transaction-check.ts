@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Hitachi America, Ltd.
+ * Copyright 2018-2020 Hitachi America, Ltd.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -75,7 +75,8 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
             return;
         }
 
-        const lastConfigBlock = transaction.block.getMetaData(FabricMetaDataIndex.LAST_CONFIG).value.index;
+        const metadataLastConfig = transaction.block.getMetaData(FabricMetaDataIndex.LAST_CONFIG).value?.index;
+        const lastConfigBlock = metadataLastConfig == null ? 0 : metadataLastConfig;
         const configInfo = await this.config.getConfig(lastConfigBlock);
 
         if (transaction.getTransactionType() === 1 || transaction.getTransactionType() === 2) {
@@ -133,8 +134,8 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
                 await this.results.addAsyncResult("checkNormalTransaction",
                     ResultPredicate.INVOKE,
                     { name: "VerifyIdentityMSP", value: verifyIdentityMSP },
-                    { name: endorsementStr + ".Endorser.MspID", value: endorsement.endorser.Mspid },
-                    { name: endorsementStr + ".Endorser.Identity", value: endorsement.endorser.IdBytes },
+                    { name: endorsementStr + ".Endorser.MspID", value: endorsement.endorser.mspid },
+                    { name: endorsementStr + ".Endorser.Identity", value: endorsement.endorser.id_bytes },
                     { name: configInfo.transaction + ".Config.ApplicationMSP", value: configInfo.applicationMSPs }
                 );
 
