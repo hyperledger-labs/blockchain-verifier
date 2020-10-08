@@ -1,0 +1,20 @@
+{
+    "peer": {
+        "url": "grpcs://localhost:7051",
+        "mspID": "org1",
+        "tlsCACertFile": "test/fabric-query2/org1-ca-tls.pem"
+    },
+    "channel": "test-channel",
+    "client": {
+        "certFile": "test/fabric-query2/user-cert.pem",
+        "keyFile": "test/fabric-query2/user-key.pem",
+        "mspID": "user-org",
+        "mutualTLS": {
+            "certFile": "test/fabric-query2/tls-user-cert.pem",
+            "keyFile": "test/fabric-query2/tls-user-key.pem"
+        }
+    },
+    "config": {
+        "useDiscovery": false
+    }
+}

@@ -56,10 +56,11 @@ Runs verification against a Hyperledger Fabric ledger file `/tmp/block/blockfile
 
 ## Network plugins
 
-| Name           | Supported Platform          | Description                         | Config value (`-c` option)             |
-|----------------|-----------------------------|-------------------------------------|----------------------------------------|
-| `fabric-block` | Hyperledger Fabric v1.4/2.2 | Verify a ledger file and private DB | Path to the ledger file or config JSON |
-| `fabric-query` | Hyperledger Fabric v1.4     | Verify blocks by querying to a peer | Path to the query config file          |
+| Name            | Supported Platform          | Description                                | Config value (`-c` option)             |
+|-----------------|-----------------------------|--------------------------------------------|----------------------------------------|
+| `fabric-block`  | Hyperledger Fabric v1.4/2.2 | Verify a ledger file and private DB        | Path to the ledger file or config JSON |
+| `fabric-query`  | Hyperledger Fabric v1.4     | Verify blocks by querying to a peer        | Path to the query config file          |
+| `fabric-query2` | Hyperledger Fabric v2.2     | Verify blocks by querying to a peer (v2.x) | Path to the query config file (v2)     |
 
 ### fabric-block
 
@@ -98,6 +99,45 @@ Example:
 *Limitation:* The ledger may be divided to multiple files when it becomes huge, but the plugin currently
 only supports a single file. You may try to check the divided files by concatenating the ledger files.
 Even if the directory is specified with the JSON, the plugin uses only the first file(`blockfile_000000`).
+
+### fabric-query2
+
+This plugin checks blocks by obtaining them calling `qscc` system chaincode in a peer.
+As this plugin uses v2.x of Fabric SDK, this only supports v2.x peers. For v1.4 peers, the `fabric-query` plugin should be used.
+
+The configuration value for the plugin should be the file name to a configuration JSON.
+Note that the structure of the JSON is far different from that for `fabric-query`.
+
+The format is shown below:
+
+| Key name                       | Type    | Description                                                         |
+|--------------------------------|---------|---------------------------------------------------------------------|
+| `peer.url`                     | string  | URL to a peer (e.g. `grpcs://peer1.org1.example.com:7051`)          |
+| `peer.mspID`                   | string  | MSP ID for the organization which the peer belongs to               |
+| `peer.tlsCACertFile`           | string  | CA certificate for TLS with the peer (Required when TLS is enabled) |
+| `channel`                      | string  | Channel name                                                        |
+| `client.certFile`              | string  | Certificate for the client identity to use to connect to the peer   |
+| `client.keyFile`               | string  | Private key for the client identity to use to connect to the peer   |
+| `client.mspID`                 | string  | MSP ID for the client identity                                      |
+| `client.mutualTLS.certFile`    | string  | Client certificate (Required when mutual TLS is enabled)            |
+| `client.mutualTLS.keyFile`     | string  | Client private key (Required when mutual TLS is enabled)            |
+
+Example:
+```
+{
+  "peer": {
+    "url": "grpcs://localhost:7051",
+    "mspID": "Org1MSP",
+    "tlsCACertFile": "/opt/gopath/src/github.com/hyperledger/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/tlscacerts/tls-localhost-7054-ca-org1.pem"
+  },
+  "channel": "mychannel",
+  "client": {
+    "certFile": "/opt/gopath/src/github.com/hyperledger/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/cert.pem",
+    "keyFile": "/opt/gopath/src/github.com/hyperledger/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/e488b2baef3f8121f9122140bd937c7708336f185e1668d66bbfbf5157379e27_sk",
+    "mspID": "Org1MSP"
+  }
+}
+```
 
 ### fabric-query
 
