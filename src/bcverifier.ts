@@ -15,7 +15,8 @@ type PluginInfo = { pluginName: string, moduleName: string };
 
 const networkPlugins: PluginInfo[] = [
     { pluginName: "fabric-block", moduleName: "./network/fabric-block" },
-    { pluginName: "fabric-query", moduleName: "./network/fabric-query" }
+    { pluginName: "fabric-query", moduleName: "./network/fabric-query" },
+    { pluginName: "fabric-query2", moduleName: "./network/fabric-query2" }
 ];
 const blockVerifiers: PluginInfo[] = [
     { pluginName: "generic-block", moduleName: "./check/block-integrity" },
