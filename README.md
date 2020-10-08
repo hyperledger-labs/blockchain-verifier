@@ -15,13 +15,14 @@ The goal of this tool is to verify the integrity of blockchain blocks and transa
 
 ## Install
 
-As the tool is written in TypeScript, you need to compile it before execution.
+As the tool is written in TypeScript, you need to compile it before execution (automatically done after `npm install` is executed).
 
 ```
 $ git clone https://github.com/shimos/bcverifier
 $ npm install
-$ npm run build
 ```
+
+You can also compile manually by `npm run build`.
 
 ## Usage
 
@@ -258,6 +259,10 @@ For detail, please refer to [the application checker reference](docs/application
   - Multiple ledger files for Hyperledger Fabric
 
 ## Changes
+
+### v0.2.2 (Oct. 8, 2020)
+
+- Add "fabric-query2" plugin to support querying blocks from v2.x peers
 
 ### v0.2.1 (Oct. 1, 2020)
 
