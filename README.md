@@ -15,19 +15,14 @@ The goal of this tool is to verify the integrity of blockchain blocks and transa
 
 ## Install
 
-As the tool is written in TypeScript, you need to compile it before execution (automatically done after `npm install` is executed).
-
 ```
-$ git clone https://github.com/shimos/bcverifier
-$ npm install
+$ npm install blockchain-verifier
 ```
-
-You can also compile manually by `npm run build`.
 
 ## Usage
 
 ```
-$ node ./build/cli.js -n (Network plugin) -c (Network config) -o (Result file) (Command)
+$ npx bcverifier -n (Network plugin) -c (Network config) -o (Result file) (Command)
 ```
 
 Run with `-h` for the full list of the options.
@@ -50,7 +45,7 @@ Run with `-h` for the full list of the options.
 ### Example
 
 ```
-$ node ./build/cli.js -n fabric-block -c /tmp/block/blockfile_000000 -o result.json start
+$ npx bcverifier -n fabric-block -c /tmp/block/blockfile_000000 -o result.json start
 ```
 
 Runs verification against a Hyperledger Fabric ledger file `/tmp/block/blockfile_000000` using the `fabric-block` plugin.

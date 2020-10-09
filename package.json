@@ -1,5 +1,5 @@
 {
-  "name": "bcverifier",
+  "name": "blockchain-verifier",
   "version": "0.2.2",
   "description": "Blockchain Verifier",
   "main": "build/index.js",
@@ -11,7 +11,7 @@
     "build": "tsc && chmod a+x build/cli.js",
     "test": "jest --coverage",
     "lint": "tslint 'src/**/*.ts'",
-    "prepare": "npm run build"
+    "prepare": "tsc"
   },
   "author": "Taku Shimosawa <taku.shimosawa@hal.hitachi.com>",
   "license": "Apache-2.0",
@@ -57,5 +57,6 @@
         "tsConfig": "tsconfig.test.json"
       }
     }
-  }
+  },
+  "homepage": "https://github.com/hyperledger-labs/blockchain-verifier"
 }
