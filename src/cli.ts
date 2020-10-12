@@ -4,8 +4,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
-// tslint:disable:no-console
+/* eslint-disable no-console */
 
 import commander from "commander";
 import { writeFileSync } from "fs";
@@ -23,7 +22,7 @@ function list(val: string): string[] {
     return val.split(",");
 }
 
-commander.version("v0.2.0")
+commander.version("v0.3.0")
     .description("Blockchain Verifier CLI")
     .option("-n, --network-type <type>", "Network type")
     .option("-c, --network-config <config>", "Config for network")

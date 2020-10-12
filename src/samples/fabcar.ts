@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// tslint:disable:no-console
+/* eslint-disable no-console */
 
 import { AppTransaction, AppTransactionCheckLogic, CheckPlugin,
          FabricFunctionInfo, FabricTransaction, ResultSet } from "..";

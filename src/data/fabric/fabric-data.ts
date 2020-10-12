@@ -29,13 +29,14 @@ class VarBuffer {
         let ret = 0;
         let i = 0;
 
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             const value = this.buffer.readUInt8(this.offset);
             this.offset++;
 
-            // tslint:disable-next-line: no-bitwise
+            // eslint-disable-next-line no-bitwise
             ret = ret | ((value & 0x7f) << (i * 7));
-            // tslint:disable-next-line: no-bitwise
+            // eslint-disable-next-line no-bitwise
             if (!(value & 0x80)) {
                 break;
             }
@@ -55,9 +56,9 @@ function encodeOrderPreservingInt(num: number) {
     const enc: number[] = [];
     // First encode to bytes in little-endian
     while (num > 0) {
-        // tslint:disable-next-line: no-bitwise
+        // eslint-disable-next-line no-bitwise
         enc.push(num & 0xff);
-        // tslint:disable-next-line: no-bitwise
+        // eslint-disable-next-line no-bitwise
         num = num >> 8;
     }
     const szBuf = encodeVarInt(enc.length);
@@ -74,9 +75,9 @@ function encodeVarInt(num: number): Buffer {
     const enc: number[] = [];
 
     while (num > 0) {
-        // tslint:disable-next-line: no-bitwise
+        // eslint-disable-next-line no-bitwise
         enc.push(num & 0x7f);
-        // tslint:disable-next-line: no-bitwise
+        // eslint-disable-next-line no-bitwise
         num = num >> 7;
     }
     if (enc.length === 0) {
@@ -87,7 +88,7 @@ function encodeVarInt(num: number): Buffer {
     for (let i = 0; i < enc.length; i++) {
         const j = enc.length - i - 1;
         if (j !== 0) {
-            // tslint:disable-next-line: no-bitwise
+            // eslint-disable-next-line no-bitwise
             buf.writeUInt8(enc[j] | 0x80, i);
         } else {
             buf.writeUInt8(enc[j], i);

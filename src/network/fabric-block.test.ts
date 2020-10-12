@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Hitachi America, Ltd.
+ * Copyright 2019-2020 Hitachi America, Ltd.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -20,6 +20,7 @@ const testDataset: { [name: string]: string } = {
 describe("FabricBlockSource", () => {
     for (const dataName in testDataset) {
         const dataPath = testDataset[dataName];
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const dataConfig = require(path.join(dataPath, "config.json"));
 
         test("Create BlockSource - " + dataName, async () => {
@@ -80,6 +81,7 @@ describe("FabricBlockSource", () => {
 describe("FabricBlockPlugin", () => {
     for (const dataName in testDataset) {
         const dataPath = testDataset[dataName];
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const dataConfig = require(path.join(dataPath, "config.json"));
 
         // test for the first set only
