@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Hitachi America, Ltd.
+ * Copyright 2018-2020 Hitachi America, Ltd.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -56,17 +56,18 @@ function readVarInt(file: number, position: number | null): [number, number] {
     const buf = Buffer.alloc(1);
     let numByte = 0;
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         if (readSync(file, buf, 0, 1, position) !== 1) {
             throw new BCVerifierError("Cannot read varint from a block file");
         }
         value = buf.readUInt8(0);
 
-        // tslint:disable-next-line: no-bitwise
+        // eslint-disable-next-line no-bitwise
         ret |= (value & 0x7f) << (7 * numByte);
         numByte++;
 
-        // tslint:disable-next-line: no-bitwise
+        // eslint-disable-next-line no-bitwise
         if (!(value & 0x80)) {
             return [ret, numByte];
         }
@@ -107,6 +108,7 @@ export class FabricBlockSource implements BlockSource {
             let size = 0;
             let len = 0;
 
+            // eslint-disable-next-line no-constant-condition
             while (true) {
                 [size, len] = readVarInt(file, position);
                 if (size > 0) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Hitachi America, Ltd.
+ * Copyright 2018-2020 Hitachi America, Ltd.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -54,8 +54,7 @@ function evaluate(predicate: ResultPredicate, values: ResultOperand[]): boolean 
             }
             return true;
         case ResultPredicate.INVOKE:
-            const params = values.slice(1).map((op) => op.value);
-            return v.value(...params);
+            return v.value(...values.slice(1).map((op) => op.value));
     }
 }
 
