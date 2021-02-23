@@ -35,3 +35,15 @@ export interface AppTransactionCheckLogic {
     probeTransactionCheck(tx: AppTransaction): Promise<boolean>;
     performTransactionCheck(tx: AppTransaction, resultSet: ResultSet): Promise<void>;
 }
+
+export abstract class MultipleLedgerCheckPlugin {
+    protected preferredBlockProvider: BlockProvider;
+    protected otherProviders: BlockProvider[];
+    protected resultSet: ResultSet;
+
+    public constructor(preferredBlockProvider: BlockProvider, otherProviders: BlockProvider[], resultSet: ResultSet) {
+        this.preferredBlockProvider = preferredBlockProvider;
+        this.otherProviders = otherProviders;
+        this.resultSet = resultSet;
+    }
+}
