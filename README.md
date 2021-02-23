@@ -238,6 +238,13 @@ It also shows that the signature header (certificate) for the transaction `b9f33
 
 The results for these checks are all "OK," which means that the integrity of the blockchain is verified.
 
+### Comparison of multiple ledgers
+
+When multiple ledgers are specified, bcverifier checks the hash value of each block in a ledger with the hash values of the block
+in the other ledgers.
+Currently, only the "fabric-block" plugin with the JSON configuration supports this feature.
+The first ledger file in the configuration is considered to be "preferred," and the other ledger files are used only in this check.
+
 ## Application Specific Check
 
 You can write application specific check programs that are called from BCVerifier.
@@ -248,6 +255,7 @@ For detail, please refer to [the application checker reference](docs/application
 
 ## TODO
 
+- Support for Hyperledger Fabric v2.3
 - Documents (API reference, Data specification)
 - Unit tests and integration tests
 - Support for more plugins and platforms
