@@ -22,6 +22,7 @@ describe("BlockProvider", () => {
 
     test("Good path", async () => {
         const provider = new BlockProvider(blockSource);
+        expect(provider.getSourceID()).toBe("mockSource");
 
         await expect(provider.getBlock(1)).resolves.toBe(correctBlocks[1]);
         await expect(provider.getBlock(0)).resolves.toBe(correctBlocks[0]);
