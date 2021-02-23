@@ -23,7 +23,10 @@ const blockVerifiers: PluginInfo[] = [
     { pluginName: "fabric-block", moduleName: "./check/fabric-block-check" }
 ];
 const txVerifiers: PluginInfo[] = [
-    { pluginName: "fabric-transaction", moduleName: "./check/fabric-transaction-check"}
+    { pluginName: "fabric-transaction", moduleName: "./check/fabric-transaction-check" }
+];
+const multipleLedgerVerifiers: PluginInfo[] = [
+    { pluginName: "multiple-ledgers", moduleName: "./check/multiple-ledgers" }
 ];
 
 export class BCVerifier {
@@ -78,6 +81,25 @@ export class BCVerifier {
             const verifierModule = await import(info.moduleName);
             txCheckPlugins.push(new verifierModule.default(blockProvider, this.resultSet));
         }
+
+        const preferredProvider = blockProvider;
+        const allSources = await this.network.getBlockSources();
+        const dataModelType = this.network.getDataModelType();
+        const otherProviders = allSources.filter((s) => s.getSourceID() !== preferredProvider.getSourceID())
+            .map((s) => {
+                if (dataModelType === DataModelType.KeyValue) {
+                    return new KeyValueBlockProvider(s);
+                } else {
+                    return new BlockProvider(s);
+                }
+            });
+
+        const multipleBlockCheckPlugins: BlockCheckPlugin[] = [];
+        for (const info of multipleLedgerVerifiers) {
+            const verifierModule = await import(info.moduleName);
+            multipleBlockCheckPlugins.push(new verifierModule.default(preferredProvider, otherProviders, this.resultSet));
+        }
+
         const appStateCheckers: AppStateCheckLogic[] = [];
         const appTxCheckers: AppTransactionCheckLogic[] = [];
         for (const modName of this.config.applicationCheckers) {
@@ -106,6 +128,12 @@ export class BCVerifier {
                     await v.performCheck(tx.getTransactionID());
                 }
                 lastTx = tx;
+            }
+
+            if (otherProviders.length > 0) {
+                for (const v of multipleBlockCheckPlugins) {
+                    await v.performCheck(i);
+                }
             }
         }
 
