@@ -88,6 +88,10 @@ export class BlockProvider {
         }
     }
 
+    public getSourceID(): string {
+        return this.source.getSourceID();
+    }
+
     protected registerTransactions(block: Block): void {
         const txs = block.getTransactions();
         for (const tx of txs) {
