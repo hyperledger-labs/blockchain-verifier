@@ -58,35 +58,36 @@ if (cliCommand == null || CLI_COMMANDS[cliCommand] == null) {
 }
 
 async function start(): Promise<number> {
-    if (commander.networkType == null || commander.networkConfig == null) {
+    const opts = commander.opts();
+    if (opts.networkType == null || opts.networkConfig == null) {
         console.error("ERROR: Network type and config must be specified.");
         commander.outputHelp();
         process.exit(1);
     }
     let applicationCheckers = [];
-    if (commander.checkers != null) {
-        applicationCheckers = commander.checkers;
+    if (opts.checkers != null) {
+        applicationCheckers = opts.checkers;
     }
 
     const bcv = new BCVerifier({
-        networkType: commander.networkType,
-        networkConfig: commander.networkConfig,
+        networkType: opts.networkType,
+        networkConfig: opts.networkConfig,
         applicationCheckers: applicationCheckers
     });
 
     const resultSet = await bcv.verify();
 
-    if (commander.output) {
+    if (opts.output) {
         const json = new JSONOutput();
-        console.log("Output the result to %s", commander.output);
+        console.log("Output the result to %s", opts.output);
 
         const buf = await json.convertResult(resultSet);
-        writeFileSync(commander.output, buf);
+        writeFileSync(opts.output, buf);
     }
 
     const resultSummary = resultSet.getSummary();
-    console.log("Checked by %s", commander.networkType);
-    console.log("  Config: %s", commander.networkConfig);
+    console.log("Checked by %s", opts.networkType);
+    console.log("  Config: %s", opts.networkConfig);
     console.log("");
     console.log("Blocks:");
     console.log("  Block Range: Block %d to Block %d", resultSummary.blockRange.start, resultSummary.blockRange.end);
