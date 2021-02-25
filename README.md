@@ -7,7 +7,7 @@ The goal of this tool is to verify the integrity of blockchain blocks and transa
 ## Supported Blockchain Platforms
 
 - Hyperledger Fabric v1.4
-- Hyperledger Fabric v2.2
+- Hyperledger Fabric v2.2 & v2.3
 
 ## Prerequisites
 
@@ -255,7 +255,6 @@ For detail, please refer to [the application checker reference](docs/application
 
 ## TODO
 
-- Support for Hyperledger Fabric v2.3
 - Documents (API reference, Data specification)
 - Unit tests and integration tests
 - Support for more plugins and platforms

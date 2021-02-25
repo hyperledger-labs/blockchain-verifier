@@ -79,6 +79,11 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
         const lastConfigBlock = metadataLastConfig == null ? 0 : metadataLastConfig;
         const configInfo = await this.config.getConfig(lastConfigBlock);
 
+        if ((transaction.header.signature_header.creator.id_bytes as Buffer).byteLength === 0) {
+            this.results.addSkipResult("performCheck", "No creator information");
+            return;
+        }
+
         if (transaction.getTransactionType() === 1 || transaction.getTransactionType() === 2) {
             this.results.addResult("performCheck",
                 ResultPredicate.INVOKE,
