@@ -262,6 +262,11 @@ For detail, please refer to [the application checker reference](docs/application
 
 ## Changes
 
+### v0.3.0 (Feb. 25, 2021)
+
+- Fix an error when verifying Hyperledger Fabric v2.3 blocks
+- Add a check that compares the hash values of each block in multiple ledgers
+
 ### v0.2.2 (Oct. 8, 2020)
 
 - Add "fabric-query2" plugin to support querying blocks from v2.x peers
