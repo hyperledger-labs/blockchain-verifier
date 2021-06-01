@@ -1,0 +1,15 @@
+{
+    "channel": "test-channel",
+    "client": {
+        "certFile": "test/fabric-query2/user-cert.pem",
+        "keyFile": "test/fabric-query2/user-key.pem",
+        "mspID": "user-org",
+        "mutualTLS": {
+            "certFile": "test/fabric-query2/tls-user-cert.pem",
+            "keyFile": "test/fabric-query2/tls-user-key.pem"
+        }
+    },
+    "config": {
+        "useDiscovery": false
+    }
+}

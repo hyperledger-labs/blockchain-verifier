@@ -28,7 +28,8 @@ interface FabricQuery2PluginPeerConfig {
 }
 
 export interface FabricQuery2PluginConfig {
-    peer: FabricQuery2PluginPeerConfig;
+    peer?: FabricQuery2PluginPeerConfig;
+    peers?: FabricQuery2PluginPeerConfig[];
     channel: string;
     client: {
         certFile: string;
@@ -172,10 +173,22 @@ export default class FabricQuery2Plugin implements NetworkPlugin {
 
     public async getBlockSources(): Promise<BlockSource[]> {
         if (this.sources == null) {
-            const blockSource = new FabricQuery2Source(this.pluginConfig, this.pluginConfig.peer);
-            await blockSource.init();
+            if (this.pluginConfig.peers) {
+                this.sources = [];
+                for (const peer of this.pluginConfig.peers) {
+                    const blockSource = new FabricQuery2Source(this.pluginConfig, peer);
+                    await blockSource.init();
 
-            this.sources = [blockSource];
+                    this.sources.push(blockSource);
+                }
+            } else if (this.pluginConfig.peer) {
+                const blockSource = new FabricQuery2Source(this.pluginConfig, this.pluginConfig.peer);
+                await blockSource.init();
+
+                this.sources = [blockSource];
+            } else {
+                throw new BCVerifierError("fabric-query2 Plugin: No peer is specified in the config")
+            }
         }
         return this.sources;
     }
@@ -186,7 +199,7 @@ export default class FabricQuery2Plugin implements NetworkPlugin {
         if (this.sources != null && this.sources.length > 0) {
             return this.sources[0];
         } else {
-            throw new BCVerifierError("FabricQuery Plugin: Cannot find any source");
+            throw new BCVerifierError("fabric-query2 Plugin: Cannot find any source");
         }
     }
 }
