@@ -17,6 +17,8 @@ jest.mock("../data/fabric");
 
 const testDataDir = path.join(__dirname, "..", "..", "test", "fabric-query2");
 const configFile = path.join(testDataDir, "config.json");
+const configMultiplePeersFile = path.join(testDataDir, "config.multiple.json");
+const configNoPeerFile = path.join(testDataDir, "config.none.json");
 
 // Dummy objects
 const queryObj = new Query("cc", new Channel("ch", new Client("client")));
@@ -37,6 +39,8 @@ const newEndpoint = jest.fn().mockImplementation(() => new Endpoint({}));
 
 describe("FabricQuery2Source", () => {
     const config: FabricQuery2PluginConfig = JSON.parse(fs.readFileSync(configFile).toString());
+    const peerConfig = config.peer!;
+
     describe("constructor", () => {
         test("creates a FabricQuery2Source instance", () => {
             (Client.newClient as jest.Mock).mockClear();
@@ -44,7 +48,7 @@ describe("FabricQuery2Source", () => {
             (channelObj.newQuery as jest.Mock).mockClear();
             (User.createUser as jest.Mock).mockClear();
 
-            const _source = new FabricQuery2Source(config, config.peer);
+            const _source = new FabricQuery2Source(config, peerConfig);
 
             expect(Client.newClient).toBeCalledTimes(1);
             expect(newChannel).toBeCalledTimes(1);
@@ -57,7 +61,7 @@ describe("FabricQuery2Source", () => {
     });
     describe("init()", () => {
         test("initializes a connection to peer", async () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
 
             (newEndpoint as jest.Mock).mockClear();
             (endorserObj.connect as jest.Mock).mockClear();
@@ -75,21 +79,21 @@ describe("FabricQuery2Source", () => {
     });
     describe("getSourceID()", () => {
         test("returns the URL as the source ID", () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
 
             expect(source.getSourceID()).toBe("grpcs://localhost:7051");
         });
     });
     describe("getSourceOrganizationID()", () => {
         test("returns the MSP ID as the organization ID", () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
 
             expect(source.getSourceOrganizationID()).toBe("org1");
         });
     });
     describe("getBlock()", () => {
         test("returns a block", async () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
             await source.init();
 
             (queryObj.build as jest.Mock).mockClear();
@@ -115,13 +119,13 @@ describe("FabricQuery2Source", () => {
         });
 
         test("throws an error when init was not called", async () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
 
             await expect(source.getBlock(1)).rejects.toThrowError(BCVerifierError);
         });
 
         test("throws an error when qscc returns an error", async () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
             await source.init();
 
             (queryObj.send as jest.Mock).mockClear().mockImplementation(() => ({
@@ -139,7 +143,7 @@ describe("FabricQuery2Source", () => {
     });
     describe("getBlockHash()", () => {
         test("returns a hash", async () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
             await source.init();
 
             (queryObj.send as jest.Mock).mockClear().mockImplementation(() => ({
@@ -158,7 +162,7 @@ describe("FabricQuery2Source", () => {
     });
     describe("getBlockRange()", () => {
         test("returns blocks", async () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
             await source.init();
 
             (queryObj.send as jest.Mock).mockClear().mockImplementation(() => (
@@ -185,7 +189,7 @@ describe("FabricQuery2Source", () => {
         });
 
         test("throws when the range is invalid", async () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
             await source.init();
 
             await expect(source.getBlockRange(4, 3)).rejects.toThrowError(BCVerifierError);
@@ -193,7 +197,7 @@ describe("FabricQuery2Source", () => {
     });
     describe("getBlockHeight()", () => {
         test("returns the height of blocks", async () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
             await source.init();
 
             (queryObj.build as jest.Mock).mockClear();
@@ -217,7 +221,7 @@ describe("FabricQuery2Source", () => {
 
     describe("findBlockByTransaction()", () => {
         test("returns the block for the transaction", async () => {
-            const source = new FabricQuery2Source(config, config.peer);
+            const source = new FabricQuery2Source(config, peerConfig);
             await source.init();
 
             (queryObj.build as jest.Mock).mockClear();
@@ -270,6 +274,17 @@ describe("FabricQuery2Plugin", () => {
 
             const sources = await plugin.getBlockSources();
             expect(sources).toHaveLength(1);
+        });
+        test("returns multiple sources when multiple peers are specified", async () => {
+            const plugin = new FabricQuery2Plugin(configMultiplePeersFile);
+
+            const sources = await plugin.getBlockSources();
+            expect(sources).toHaveLength(2);
+        });
+        test("throws when no peer is specified", async () => {
+            const plugin = new FabricQuery2Plugin(configNoPeerFile);
+
+            expect(plugin.getBlockSources()).rejects.toThrowError(BCVerifierError);
         });
     });
     describe("getPreferredBlockSource()", () => {

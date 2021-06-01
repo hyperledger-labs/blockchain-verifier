@@ -242,7 +242,7 @@ The results for these checks are all "OK," which means that the integrity of the
 
 When multiple ledgers are specified, bcverifier checks the hash value of each block in a ledger with the hash values of the block
 in the other ledgers.
-Currently, only the "fabric-block" plugin with the JSON configuration supports this feature.
+Currently, the "fabric-block" and "fabric-query2" plugins support this feature.
 The first ledger file in the configuration is considered to be "preferred," and the other ledger files are used only in this check.
 
 ## Application Specific Check
