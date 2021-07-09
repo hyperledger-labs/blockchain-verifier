@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc && chmod a+x build/cli.js",
-    "test": "jest --coverage",
+    "test": "jest --coverage --config jest.unit.js",
     "lint": "eslint src --ext .ts",
     "prepare": "tsc"
   },
@@ -40,25 +40,6 @@
   },
   "engines": {
     "node": "^10.15 || ^12.15"
-  },
-  "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(tsx?)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ],
-    "globals": {
-      "ts-jest": {
-        "tsconfig": "tsconfig.test.json"
-      }
-    }
   },
   "homepage": "https://github.com/hyperledger-labs/blockchain-verifier"
 }
