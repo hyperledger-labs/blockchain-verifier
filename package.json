@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc && chmod a+x build/cli.js",
     "test": "jest --coverage --config jest.unit.js",
+    "integration-test": "jest --config jest.integration.js",
     "lint": "eslint src --ext .ts",
     "prepare": "tsc"
   },
