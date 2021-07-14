@@ -29,7 +29,8 @@ const execOptions: ExecFileSyncOptionsWithBufferEncoding = {
     stdio: ["ignore", "inherit", "inherit"],
     encoding: "utf8"
 };
-const versionCombinations = {
+const versionCombinations: {[version: string]: string[]} = {
+    "2.2.3": ["2.2.3", "1.5.0"],
     "2.3.2": ["2.3.2", "1.5.0"]
 };
 
@@ -125,21 +126,55 @@ function countResults(results: any, target?: CheckTarget, checkerID?: string): C
 
 const CHECKER_ID_BLOCK_HASH_COMPARISON = "GenericMultipleLedgerBlockPlugin.blockHashComparisonWithOtherSource";
 
-describe("Hyperledger Fabric 2.3.2", () => {
-    beforeAll(async () => {
-        try {
-            execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
-        } catch (e) {
-            // Ignore
+async function startNetworkV22(version: string) {
+    try {
+        execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
+    } catch (e) {
+        // Ignore
+    }
+
+    execFileSync("npm", ["run", "build"], execOptions);
+
+    execFileSync(helperScriptPath("prepare.sh"), versionCombinations[version], {
+        ...execOptions,
+        env: {
+            ...process.env,
+            COMPOSE_PROJECT_NAME: "fabric"
         }
+    });
+    execFileSync(helperScriptPath("fabcar.sh"), [], execOptions);
+    execFileSync(helperScriptPath("copy-files.sh"), [], execOptions);
 
-        execFileSync("npm", ["run", "build"], execOptions);
+    fabricQueryConfig.client.keyFile = findKeyFile(path.join(mspAdminDir("org1.example.com"), "keystore"));
+}
 
-        execFileSync(helperScriptPath("prepare.sh"), versionCombinations["2.3.2"], execOptions);
-        execFileSync(helperScriptPath("fabcar.sh"), [], execOptions);
-        execFileSync(helperScriptPath("copy-files.sh"), [], execOptions);
+async function startNetworkV23(version: string) {
+    try {
+        execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
+    } catch (e) {
+        // Ignore
+    }
 
-        fabricQueryConfig.client.keyFile = findKeyFile(path.join(mspAdminDir("org1.example.com"), "keystore"));
+    execFileSync("npm", ["run", "build"], execOptions);
+
+    execFileSync(helperScriptPath("prepare.sh"), versionCombinations[version], execOptions);
+    execFileSync(helperScriptPath("fabcar.sh"), [], execOptions);
+    execFileSync(helperScriptPath("copy-files.sh"), [], execOptions);
+
+    fabricQueryConfig.client.keyFile = findKeyFile(path.join(mspAdminDir("org1.example.com"), "keystore"));
+}
+
+type TestConfig = {
+    version: string;
+    startNetwork: (version: string) => Promise<void>;
+}
+
+describe.each<TestConfig>([
+    { version: "2.2.3", startNetwork: startNetworkV22 },
+    { version: "2.3.2", startNetwork: startNetworkV23 },
+])("Hyperledger Fabric $version", ({version, startNetwork}) => {
+    beforeAll(async () => {
+        await startNetwork(version);
     });
     afterAll(async() => {
         try {
