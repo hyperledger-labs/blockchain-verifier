@@ -6,7 +6,7 @@ set -e
 
 # Initialize CC
 cd ${SAMPLES}/test-network
-# ./network.sh deployCC -ccn fabcar -ccv 1 -cci initLedger -ccl go -ccp ../chaincode/fabcar/go
+./network.sh deployCC -ccn fabcar -ccv 1 -cci initLedger -ccl go -ccp ../chaincode/fabcar/go
 
 # Run transactions
 cd ${SAMPLES}/fabcar/javascript
