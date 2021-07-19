@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Copyright 2021 Hitachi, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
 
 set -e
 

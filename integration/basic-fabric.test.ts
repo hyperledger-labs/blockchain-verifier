@@ -1,3 +1,8 @@
+/*
+ * Copyright 2021 Hitachi, Ltd.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { execFileSync, ExecFileSyncOptionsWithBufferEncoding } from "child_process";
 import fs from "fs";
 import path from "path";
