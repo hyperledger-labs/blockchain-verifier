@@ -28,6 +28,7 @@ commander.version("v0.3.0")
     .option("-c, --network-config <config>", "Config for network")
     .option("-o, --output <result file>", "Result file")
     .option("-k, --checkers <checkers>", "Checker module list", list)
+    .option("-x, --exclude-checkers <checkers>", "Name of checkers to exclude", list)
     .arguments("<command>")
     .action((command) => {
         cliCommand = command;
@@ -68,11 +69,16 @@ async function start(): Promise<number> {
     if (opts.checkers != null) {
         applicationCheckers = opts.checkers;
     }
+    let checkersToExclude = [];
+    if (opts.excludeCheckers != null) {
+        checkersToExclude = opts.excludeCheckers;
+    }
 
     const bcv = new BCVerifier({
         networkType: opts.networkType,
         networkConfig: opts.networkConfig,
-        applicationCheckers: applicationCheckers
+        applicationCheckers: applicationCheckers,
+        checkersToExclude: checkersToExclude
     });
 
     const resultSet = await bcv.verify();

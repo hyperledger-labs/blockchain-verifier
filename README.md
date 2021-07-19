@@ -35,6 +35,7 @@ Run with `-h` for the full list of the options.
 | `-c (config)`   | Configuration passed to the network plugin. See the description for the network plugins for detail |
 | `-o (file)`     | Save the result JSON in the specified file                                                         |
 | `-k (checkers)` | Specify the modules to use as application-specific checkers                                        |
+| `-x (checkers)` | Disable the checkers with specified names                                                          |
 
 ### Commands
 
