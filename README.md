@@ -241,14 +241,25 @@ The results for these checks are all "OK," which means that the integrity of the
 
 ### Comparison of multiple ledgers
 
-When multiple ledgers are specified, bcverifier checks the hash value of each block in a ledger with the hash values of the block
+When multiple ledgers are specified, Blockchain Verifier checks the hash value of each block in a ledger with the hash values of the block
 in the other ledgers.
 Currently, the "fabric-block" and "fabric-query2" plugins support this feature.
-The first ledger file in the configuration is considered to be "preferred," and the other ledger files are used only in this check.
+The first ledger in the configuration is considered to be "preferred," and the other ledgers are used only in this check.
+
+## Platform Checkers
+
+Blockchain Verifier has several checkers to perform platform-level checks, independent of applications, as described in the table below.
+
+| Checker name         | Target platform    | Checks to be performed                                                 |
+|----------------------|--------------------|------------------------------------------------------------------------|
+| `generic-block`      | (Generic)          | The hash values of the blocks                                          |
+| `fabric-block`       | Hyperledger Fabric | The signature in the metadata of the blocks                            |
+| `fabric-transaction` | Hyperledger Fabric | The signature in the transactions, the hash values of the private data |
+| `multiple-ledgers`   | (Generic)          | The hash values of the blocks from different nodes                     |
 
 ## Application Specific Check
 
-You can write application specific check programs that are called from BCVerifier.
+You can write application specific check programs that are called from Blockchain Verifier.
 The check program should export a class that implements `AppStateCheckLogic` and/or `AppTransactionCheckLogic`
 (as defined in `check/index.ts`)
 
@@ -257,9 +268,8 @@ For detail, please refer to [the application checker reference](docs/application
 ## TODO
 
 - Documents (API reference, Data specification)
-- Unit tests and integration tests
+- Unit tests
 - Support for more plugins and platforms
-  - Multiple ledger files for Hyperledger Fabric
 
 ## Changes
 
