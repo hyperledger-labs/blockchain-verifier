@@ -73,13 +73,17 @@ export class BCVerifier {
 
         const blockCheckPlugins: BlockCheckPlugin[] = [];
         for (const info of blockVerifiers) {
-            const verifierModule = await import(info.moduleName);
-            blockCheckPlugins.push(new verifierModule.default(blockProvider, this.resultSet));
+            if (!this.config.checkersToExclude.includes(info.pluginName)) {
+                const verifierModule = await import(info.moduleName);
+                blockCheckPlugins.push(new verifierModule.default(blockProvider, this.resultSet));
+            }
         }
         const txCheckPlugins: TransactionCheckPlugin[] = [];
         for (const info of txVerifiers) {
-            const verifierModule = await import(info.moduleName);
-            txCheckPlugins.push(new verifierModule.default(blockProvider, this.resultSet));
+            if (!this.config.checkersToExclude.includes(info.pluginName)) {
+                const verifierModule = await import(info.moduleName);
+                txCheckPlugins.push(new verifierModule.default(blockProvider, this.resultSet));
+            }
         }
 
         const preferredProvider = blockProvider;
@@ -96,8 +100,10 @@ export class BCVerifier {
 
         const multipleBlockCheckPlugins: BlockCheckPlugin[] = [];
         for (const info of multipleLedgerVerifiers) {
-            const verifierModule = await import(info.moduleName);
-            multipleBlockCheckPlugins.push(new verifierModule.default(preferredProvider, otherProviders, this.resultSet));
+            if (!this.config.checkersToExclude.includes(info.pluginName)) {
+                const verifierModule = await import(info.moduleName);
+                multipleBlockCheckPlugins.push(new verifierModule.default(preferredProvider, otherProviders, this.resultSet));
+            }
         }
 
         const appStateCheckers: AppStateCheckLogic[] = [];

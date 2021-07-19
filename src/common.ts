@@ -9,6 +9,7 @@ export interface VerificationConfig {
     networkConfig: string;
 
     applicationCheckers: string[];
+    checkersToExclude: string[];
 }
 
 export enum ResultCode {
