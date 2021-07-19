@@ -1,4 +1,8 @@
 #!/bin/sh
+#
+# Copyright 2021 Hitachi, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
 
 . "`dirname $0`/var.inc.sh"
 
