@@ -60,9 +60,11 @@ export class BCVerifier {
             throw new BCVerifierError("Failed to initialize network plugin");
         }
 
+        const appCheck = this.config.applicationCheckers.length > 0;
+
         const blockSource = await this.network.getPreferredBlockSource();
         let blockProvider: BlockProvider;
-        if (this.network.getDataModelType() === DataModelType.KeyValue) {
+        if (appCheck === true && this.network.getDataModelType() === DataModelType.KeyValue) {
             blockProvider = new KeyValueBlockProvider(blockSource);
         } else {
             blockProvider = new BlockProvider(blockSource);
@@ -91,7 +93,7 @@ export class BCVerifier {
         const dataModelType = this.network.getDataModelType();
         const otherProviders = allSources.filter((s) => s.getSourceID() !== preferredProvider.getSourceID())
             .map((s) => {
-                if (dataModelType === DataModelType.KeyValue) {
+                if (appCheck === true && dataModelType === DataModelType.KeyValue) {
                     return new KeyValueBlockProvider(s);
                 } else {
                     return new BlockProvider(s);
@@ -143,7 +145,7 @@ export class BCVerifier {
             }
         }
 
-        if (lastTx != null && this.network.getDataModelType() === DataModelType.KeyValue) {
+        if (lastTx != null && appCheck && this.network.getDataModelType() === DataModelType.KeyValue) {
             const kvProvider = blockProvider as KeyValueBlockProvider;
             const lastKeyValueTx = lastTx as KeyValueTransaction;
             try {
