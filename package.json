@@ -1,6 +1,6 @@
 {
   "name": "blockchain-verifier",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Blockchain Verifier",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -12,32 +12,33 @@
     "test": "jest --coverage --config jest.unit.js",
     "integration-test": "jest --config jest.integration.js",
     "lint": "eslint src --ext .ts",
-    "prepare": "tsc"
+    "prepare": "tsc",
+    "watch": "tsc -w"
   },
-  "author": "Taku Shimosawa <taku.shimosawa@hal.hitachi.com>",
+  "author": "Taku Shimosawa <taku.shimosawa.uf@hitachi.com>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/asn1js": "^2.0.0",
-    "@types/jest": "^26.0.20",
-    "@types/node": "^14.14.31",
-    "@types/pem": "^1.9.5",
-    "@typescript-eslint/eslint-plugin": "^4.15.2",
-    "@typescript-eslint/parser": "^4.15.2",
-    "eslint": "^7.20.0",
+    "@types/asn1js": "^2.0.2",
+    "@types/jest": "^27.0.1",
+    "@types/node": "^16.7.2",
+    "@types/pem": "^1.9.6",
+    "@typescript-eslint/eslint-plugin": "^4.29.3",
+    "@typescript-eslint/parser": "^4.29.3",
+    "eslint": "^7.32.0",
     "jest": "^27.0.6",
-    "ts-jest": "^27.0.3",
-    "typescript": "^4.2.2"
+    "ts-jest": "^27.0.5",
+    "typescript": "^4.4.2"
   },
   "dependencies": {
-    "asn1js": "^2.0.26",
-    "commander": "^7.1.0",
-    "fabric-ca-client": "^2.2.5",
-    "fabric-client": "^1.4.17",
-    "fabric-common": "^2.2.5",
-    "fabric-protos": "^2.2.5",
-    "level": "^6.0.1",
+    "asn1js": "^2.1.1",
+    "commander": "^8.1.0",
+    "fabric-ca-client": "^2.2.9",
+    "fabric-client": "^1.4.18",
+    "fabric-common": "^2.2.9",
+    "fabric-protos": "^2.2.9",
+    "level": "^7.0.0",
     "pem": "^1.14.4",
-    "protobufjs": "^6.10.2"
+    "protobufjs": "^6.11.2"
   },
   "engines": {
     "node": "^10.15 || ^12.15"
