@@ -1,4 +1,4 @@
-# BCVerifier (Blockchain Verifier)
+# Blockchain Verifier
 
 ## Overview
 
@@ -83,7 +83,7 @@ If you want to check private data, please perform check against a *copy* of the 
 Otherwise (such as using the directory for a running Fabric peer), the tool might affect the Fabric peer.
 
 Example:
-```
+```json
 [
   {
     "name": "peer0.org1.example.com",
@@ -120,7 +120,7 @@ The format is shown below:
 | `client.mutualTLS.keyFile`     | string  | Client private key (Required when mutual TLS is enabled)            |
 
 Example:
-```
+```json
 {
   "peer": {
     "url": "grpcs://localhost:7051",
@@ -158,7 +158,7 @@ The format for the JSON is as follows:
 
 Example:
 
-```
+```json
 {
   "connectionProfile": "profile.yaml",
   "useDiscovery": true,
@@ -272,6 +272,11 @@ For detail, please refer to [the application checker reference](docs/application
 - Support for more plugins and platforms
 
 ## Changes
+
+### v0.3.1 (Aug. 31, 2021)
+
+- Add an option to skip certain checkers
+- Add integration tests (with Hyperledger Fabric v2.2/2.3)
 
 ### v0.3.0 (Feb. 25, 2021)
 

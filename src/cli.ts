@@ -6,7 +6,7 @@
  */
 /* eslint-disable no-console */
 
-import commander from "commander";
+import { Command } from "commander";
 import { writeFileSync } from "fs";
 import { BCVerifier } from "./bcverifier";
 import { BCVerifierError } from "./common";
@@ -22,7 +22,9 @@ function list(val: string): string[] {
     return val.split(",");
 }
 
-commander.version("v0.3.0")
+const program = new Command();
+
+program.version("v0.3.1")
     .description("Blockchain Verifier CLI")
     .option("-n, --network-type <type>", "Network type")
     .option("-c, --network-config <config>", "Config for network")
@@ -37,7 +39,7 @@ commander.version("v0.3.0")
 
 if (cliCommand == null || CLI_COMMANDS[cliCommand] == null) {
     console.error("ERROR: Command is not specified or unknown.");
-    commander.outputHelp();
+    program.outputHelp();
     process.exit(1);
 } else {
     CLI_COMMANDS[cliCommand]()
@@ -59,10 +61,10 @@ if (cliCommand == null || CLI_COMMANDS[cliCommand] == null) {
 }
 
 async function start(): Promise<number> {
-    const opts = commander.opts();
+    const opts = program.opts();
     if (opts.networkType == null || opts.networkConfig == null) {
         console.error("ERROR: Network type and config must be specified.");
-        commander.outputHelp();
+        program.outputHelp();
         process.exit(1);
     }
     let applicationCheckers = [];
