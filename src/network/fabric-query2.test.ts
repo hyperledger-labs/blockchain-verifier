@@ -39,6 +39,7 @@ const newEndpoint = jest.fn().mockImplementation(() => new Endpoint({}));
 
 describe("FabricQuery2Source", () => {
     const config: FabricQuery2PluginConfig = JSON.parse(fs.readFileSync(configFile).toString());
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const peerConfig = config.peer!;
 
     describe("constructor", () => {

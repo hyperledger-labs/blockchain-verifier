@@ -84,7 +84,7 @@ test("incorrect ledgers", async () => {
     }
 });
 
-test("correct but inbalance ledgers", async () => {
+test("correct but imbalance ledgers", async () => {
     const preferredProvider = new BlockProvider(new MockSource("mock1", "mock-org1", correctBlocks));
     const otherProviders = [new BlockProvider(new MockSource("mock2", "mock-org2", correctBlocks.slice(0, 1)))];
 
