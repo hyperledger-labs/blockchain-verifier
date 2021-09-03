@@ -8,18 +8,10 @@ import { format } from "util";
 
 import { TransactionCheckPlugin } from ".";
 import { BCVerifierError, ResultPredicate } from "../common";
-import { FabricAction, FabricBlock, FabricMetaDataIndex, FabricPrivateRWSet,
-         FabricTransaction, getApplicationMSPs, getOrdererMSPs, MSPConfig,
-         verifyIdentityMSP, verifySignature, verifySignatureHeader } from "../data/fabric";
+import { FabricAction, FabricBlock, FabricConfigTransactionInfo, FabricMetaDataIndex, FabricPrivateRWSet,
+         FabricTransaction, verifyIdentityMSP, verifySignature, verifySignatureHeader } from "../data/fabric";
 import { BlockProvider } from "../provider";
 import { ResultSet, TransactionResultPusher } from "../result-set";
-
-export interface FabricConfigTransactionInfo {
-    blockNumber: number;
-    transaction: FabricTransaction;
-    ordererMSPs: MSPConfig[];
-    applicationMSPs: MSPConfig[];
-}
 
 export class FabricConfigCache {
     private configMap: { [configBlockNumber: number]: FabricConfigTransactionInfo };
@@ -37,18 +29,7 @@ export class FabricConfigCache {
             if (!(configBlock instanceof FabricBlock)) {
                 throw new BCVerifierError("Provider does not return FabricBlock");
             }
-            const txs = configBlock.getTransactions();
-            if (txs.length !== 1 || txs[0].getTransactionType() !== 1) {
-                throw new BCVerifierError("Not a single tx in a config block or not a config tx");
-            }
-            const configTx = txs[0];
-
-            this.configMap[blockNumber] = {
-                applicationMSPs: getApplicationMSPs(configTx),
-                blockNumber: blockNumber,
-                ordererMSPs: getOrdererMSPs(configTx),
-                transaction: configTx
-            };
+            this.configMap[blockNumber] = configBlock.getConfigTxInfo();
         }
         return this.configMap[blockNumber];
     }
@@ -89,14 +70,14 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
                 ResultPredicate.INVOKE,
                 { name: "VerifySignatureHeader", value: verifySignatureHeader },
                 { name: transaction + ".SignatureHeader", value: transaction.header.signature_header },
-                { name: configInfo.transaction + ".Config.OrdererMSP", value: configInfo.ordererMSPs }
+                { name: configInfo.transactionId + ".Config.OrdererMSP", value: configInfo.ordererMSPs }
             );
         } else {
             this.results.addResult("performCheck",
                 ResultPredicate.INVOKE,
                 { name: "VerifySignatureHeader", value: verifySignatureHeader },
                 { name: transaction + ".SignatureHeader", value: transaction.header.signature_header },
-                { name: configInfo.transaction + ".Config.ApplicationMSP", value: configInfo.applicationMSPs }
+                { name: configInfo.transactionId + ".Config.ApplicationMSP", value: configInfo.applicationMSPs }
             );
         }
 
@@ -126,7 +107,7 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
                 ResultPredicate.INVOKE,
                 { name: "VerifySignatureHeader", value: verifySignatureHeader },
                 { name: action + ".Header", value: action.decoded.header },
-                { name: configInfo.transaction + ".Config.ApplicationMSP", value: configInfo.applicationMSPs }
+                { name: configInfo.transactionId + ".Config.ApplicationMSP", value: configInfo.applicationMSPs }
             );
 
             // Check Response
@@ -141,7 +122,7 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
                     { name: "VerifyIdentityMSP", value: verifyIdentityMSP },
                     { name: endorsementStr + ".Endorser.MspID", value: endorsement.endorser.mspid },
                     { name: endorsementStr + ".Endorser.Identity", value: endorsement.endorser.id_bytes },
-                    { name: configInfo.transaction + ".Config.ApplicationMSP", value: configInfo.applicationMSPs }
+                    { name: configInfo.transactionId + ".Config.ApplicationMSP", value: configInfo.applicationMSPs }
                 );
 
                 this.results.addResult("checkNormalTransaction",

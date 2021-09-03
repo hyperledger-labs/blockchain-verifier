@@ -8,13 +8,14 @@ import { Integer, OctetString, Sequence } from "asn1js";
 import { createHash } from "crypto";
 import BlockDecoder from "fabric-common/lib/BlockDecoder";
 import { format } from "util";
-import { BlockData } from "./fabric-types";
+import { BlockData, MSPConfig } from "./fabric-types";
 
 import { BCVerifierError, BCVerifierNotFound, HashValueType,
          KeyValueBlock, KeyValuePair, KeyValuePairRead, KeyValueTransaction } from "../../common";
 
 // Proto buffer
 import { common, kvrwset, protos, rwset } from "fabric-protos";
+import { getApplicationMSPs, getOrdererMSPs } from "./fabric-utils";
 
 class VarBuffer {
     private buffer: Buffer;
@@ -104,6 +105,13 @@ export enum FabricMetaDataIndex {
 }
 
 type FabricBlockConstructorOptions = { fromFile: boolean, data: Buffer };
+
+export interface FabricConfigTransactionInfo {
+    blockNumber: number;
+    ordererMSPs: MSPConfig[];
+    applicationMSPs: MSPConfig[];
+    transactionId: string;
+}
 
 export class FabricBlock implements KeyValueBlock {
     public static fromFileBytes(bytes: Buffer) {
@@ -268,6 +276,25 @@ export class FabricBlock implements KeyValueBlock {
             return this.transactions[0];
         }
         throw new BCVerifierNotFound("Not config transaction or multiple transactions found");
+    }
+
+    public getConfigTxInfo(): FabricConfigTransactionInfo {
+        const configTx = this.getConfigTx();
+
+        return {
+            applicationMSPs: getApplicationMSPs(configTx),
+            blockNumber: this.getBlockNumber(),
+            transactionId: configTx.getTransactionID(),
+            ordererMSPs: getOrdererMSPs(configTx),
+        };
+    }
+
+    public getLastConfigBlockIndex(): number {
+        const lastConfig = this.getMetaData(FabricMetaDataIndex.LAST_CONFIG);
+        // XXX: May cause issue in big number (> 53 bit)
+        const index = lastConfig.value?.index == null ? 0 : parseInt(lastConfig.value.index, 10);
+
+        return index;
     }
 
     public async addPrivateData(privateDB: any): Promise<void> {

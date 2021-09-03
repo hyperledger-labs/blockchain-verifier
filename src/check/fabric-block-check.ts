@@ -45,13 +45,11 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
             { name: block + ".Number", value: block.getBlockNumber() });
     }
 
-   private async checkLastConfig(block: FabricBlock): Promise<FabricTransaction> {
-        const lastConfig = block.getMetaData(FabricMetaDataIndex.LAST_CONFIG);
+    private async checkLastConfig(block: FabricBlock): Promise<FabricTransaction> {
+        const index = block.getLastConfigBlockIndex();
         // XXX: Better to use raw value due to different implementation of encoding zero
         // https://github.com/protobufjs/protobuf.js/issues/1138
         const lastConfigObj: { index?: number } = {};
-        // XXX: May cause issue in big number (> 53 bit)
-        const index = lastConfig.value?.index == null ? 0 : parseInt(lastConfig.value.index, 10);
         if (index !== 0) {
             lastConfigObj.index = index;
         }
@@ -59,6 +57,7 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
 
         this.checkLastConfigIndex(index, block);
 
+        const lastConfig = block.getMetaData(FabricMetaDataIndex.LAST_CONFIG);
         for (const i in lastConfig.signatures) {
             const signature = lastConfig.signatures[i];
 

@@ -79,6 +79,8 @@ describe("Fabric Data", () => {
         expect(readSet.length).toBe(1);
         expect(readSet[0].key.toString()).toBe("lscc\0fabcar");
         expect(readSet[0].version.toString()).toBe("3-0");
+
+        expect(() => block.getConfigTx()).toThrowError();
     });
 
     test("Simple Transaction Block with nontrivial readset (fabcar:7)", async () => {
@@ -129,9 +131,23 @@ describe("Fabric Data", () => {
         const configTx = block.getConfigTx();
         expect(configTx.getTransactionType()).toBe(FabricTransactionType.CONFIG);
 
+        const info = block.getConfigTxInfo();
+        expect(info.blockNumber).toBe(0);
+        expect(info.transactionId).toBe(transactions[0].getTransactionID());
+        expect(info.applicationMSPs).toHaveLength(2);
+        expect(info.applicationMSPs[0].name).toBe("Org1MSP");
+        expect(info.applicationMSPs[1].name).toBe("Org2MSP");
+        expect(info.ordererMSPs).toHaveLength(1);
+        expect(info.ordererMSPs[0].name).toBe("OrdererMSP");
+
         // Config Update (but in a block, it is config tx)
         const blockUpdate = await marblesBlockSource.getBlock(2);
         const configTx2 = blockUpdate.getConfigTx();
         expect(configTx2.getTransactionType()).toBe(FabricTransactionType.CONFIG);
+
+        const info2 = blockUpdate.getConfigTxInfo();
+        expect(info2.blockNumber).toBe(2);
+        expect(info2.transactionId).toBe(configTx2.getTransactionID());
+        expect(info2.applicationMSPs).toHaveLength(2);
     });
 });
