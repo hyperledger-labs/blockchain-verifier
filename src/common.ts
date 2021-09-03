@@ -4,12 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { ResultSet } from "./result-set";
+import { BCVSnapshotData } from "./snapshot";
+
 export interface VerificationConfig {
     networkType: string;
     networkConfig: string;
 
     applicationCheckers: string[];
     checkersToExclude: string[];
+
+    saveSnapshot: boolean;
+    snapshotToResume?: BCVSnapshotData;
+}
+
+export interface VerificationResult {
+    resultSet: ResultSet;
+    snapshotData?: BCVSnapshotData;
 }
 
 export enum ResultCode {
@@ -59,11 +70,6 @@ export interface TransactionResult {
 
 export interface StateResult {
     results: CheckResult[];
-}
-
-export interface VerificationResult {
-    blocks: BlockResult[];
-    transactions: TransactionResult[];
 }
 
 export class BCVerifierError extends Error {

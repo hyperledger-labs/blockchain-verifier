@@ -9,3 +9,4 @@ export * from "./check";
 export * from "./common";
 export * from "./data/fabric";
 export * from "./result-set";
+export * from "./snapshot";

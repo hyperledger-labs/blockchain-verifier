@@ -3,10 +3,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
 import { AppStateCheckLogic, AppTransactionCheckLogic, BlockCheckPlugin, TransactionCheckPlugin } from "./check";
 import { BCVerifierError, BCVerifierNotImplemented, KeyValueTransaction, Transaction,
-         VerificationConfig } from "./common";
+         VerificationConfig, VerificationResult } from "./common";
 import { DataModelType, NetworkPlugin } from "./network-plugin";
 import { BlockProvider, KeyValueBlockProvider } from "./provider";
 import { ResultSet } from "./result-set";
@@ -52,7 +51,7 @@ export class BCVerifier {
         this.resultSet = new ResultSet();
     }
 
-    public async verify(): Promise<ResultSet> {
+    public async verify(): Promise<VerificationResult> {
         const networkPluginModule = await import(this.networkPlugin.moduleName);
         this.network = new networkPluginModule.default(this.config.networkConfig);
 
@@ -60,7 +59,7 @@ export class BCVerifier {
             throw new BCVerifierError("Failed to initialize network plugin");
         }
 
-        const appCheck = this.config.applicationCheckers.length > 0;
+        const appCheck = this.config.applicationCheckers.length > 0 || this.config.saveSnapshot != null;
 
         const blockSource = await this.network.getPreferredBlockSource();
         let blockProvider: BlockProvider;
@@ -174,6 +173,14 @@ export class BCVerifier {
             }
         }
 
-        return this.resultSet;
+        const result: VerificationResult = {
+            resultSet: this.resultSet
+        };
+
+        if (this.config.saveSnapshot != null && lastTx != null) {
+            result.snapshotData = await this.network.createSnapshot(blockProvider, lastTx);
+        }
+
+        return result;
     }
 }

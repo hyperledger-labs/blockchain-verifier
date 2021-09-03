@@ -31,6 +31,8 @@ program.version("v0.3.1")
     .option("-o, --output <result file>", "Result file")
     .option("-k, --checkers <checkers>", "Checker module list", list)
     .option("-x, --exclude-checkers <checkers>", "Name of checkers to exclude", list)
+    .option("-s, --save-snapshot <snapshot>", "Save snapshot after checks")
+    .option("-r, --resume-snapshot <snapshot>", "Resume checks from snapshot")
     .arguments("<command>")
     .action((command) => {
         cliCommand = command;
@@ -75,15 +77,25 @@ async function start(): Promise<number> {
     if (opts.excludeCheckers != null) {
         checkersToExclude = opts.excludeCheckers;
     }
+    const saveSnapshot = opts.saveSnapshot == null ? false : true;
 
     const bcv = new BCVerifier({
         networkType: opts.networkType,
         networkConfig: opts.networkConfig,
         applicationCheckers: applicationCheckers,
-        checkersToExclude: checkersToExclude
+        checkersToExclude: checkersToExclude,
+        saveSnapshot: saveSnapshot
     });
 
-    const resultSet = await bcv.verify();
+    const { resultSet, snapshotData } = await bcv.verify();
+
+    if (saveSnapshot) {
+        if (snapshotData == null) {
+            console.warn("Snapshot is not generated. Skipping saving the snapshot...");
+        } else {
+            writeFileSync(opts.saveSnapshot, JSON.stringify(snapshotData));
+        }
+    }
 
     if (opts.output) {
         const json = new JSONOutput();
