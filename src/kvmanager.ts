@@ -13,7 +13,7 @@ export class KeyValueManagerBlockNotSufficientError extends Error {
 export interface KeyValueManager {
     getNextDesiredBlockNumber(): number;
     feedBlock(block: KeyValueBlock): boolean;
-    getState(block: KeyValueBlock): SimpleKeyValueState;
+    getState(block: KeyValueBlock): KeyValueState;
     getTransaction(tx: string | KeyValueTransaction): AppTransaction;
 }
 
@@ -159,7 +159,7 @@ export class SimpleKeyValueManager implements KeyValueManager {
     public constructor(initialState?: KeyValueManagerInitialState) {
         if (initialState != null) {
             this.nextBlock = initialState.lastBlockNumber + 1;
-            // TODO: Load from initial state
+
             this.keyVersions = {};
             const newSnapshot = new SimpleKeyValueState(this);
             for (const value of initialState.keyValueState) {

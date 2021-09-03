@@ -9,9 +9,12 @@ import level from "level";
 import * as path from "path";
 import { format } from "util";
 
-import { BCVerifierError, BCVerifierNotImplemented } from "../common";
-import { FabricBlock } from "../data/fabric";
+import { BCVerifierError, BCVerifierNotImplemented, Transaction } from "../common";
+import { FabricBlock, FabricTransaction } from "../data/fabric";
+import { FabricBCVSnapshot } from "../data/fabric/fabric-bcv-snapshot";
 import { BlockSource, DataModelType, NetworkPlugin } from "../network-plugin";
+import { BlockProvider, KeyValueBlockProvider } from "../provider";
+import { BCVSnapshotData } from "../snapshot";
 
 type FabricBlockConfigSet = FabricBlockConfig[];
 
@@ -246,11 +249,32 @@ export default class FabricBlockPlugin implements NetworkPlugin {
         }
         return this.sources;
     }
+
     public async getPreferredBlockSource(): Promise<FabricBlockSource> {
         const sources = await this.getBlockSources();
         if (sources.length === 0) {
             throw new BCVerifierError("No Block Source found");
         }
         return sources[0];
+    }
+
+    public async createSnapshot(provider: BlockProvider, transaction: Transaction): Promise<BCVSnapshotData> {
+        const kvProvider = provider as KeyValueBlockProvider;
+        const fabricTransaction = transaction as FabricTransaction;
+
+        const lastBlock = fabricTransaction.getBlock();
+        const configBlockIndex = lastBlock.getLastConfigBlockIndex();
+        const configBlock = await kvProvider.getBlock(configBlockIndex) as FabricBlock;
+        const state = await kvProvider.getKeyValueState(fabricTransaction);
+
+        const snapshot = new FabricBCVSnapshot("fabric-block", null, {
+            block: lastBlock,
+            configBlock: configBlock,
+            transaction: fabricTransaction,
+            state: state,
+            timestamp: Date.now(),
+        });
+
+        return await snapshot.getSnapshot();
     }
 }

@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Block } from "./common";
+import { Block, Transaction } from "./common";
+import { BlockProvider } from "./provider";
+import { BCVSnapshotData } from "./snapshot";
 
 export interface BlockSource {
     getSourceID(): string;
@@ -28,4 +30,5 @@ export interface NetworkPlugin {
     getBlockSources(): Promise<BlockSource[]>;
     getPreferredBlockSource(): Promise<BlockSource>;
     getDataModelType(): DataModelType;
+    createSnapshot(provider: BlockProvider, transaction: Transaction): Promise<BCVSnapshotData>;
 }
