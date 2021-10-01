@@ -44,16 +44,15 @@ export type FabricCryptoConfig = {
     identity_identifier_hash_function: string;
 };
 
+// crypto_config and fabric_node_ous are missing in decodeFabricMSPConfig() in fabric-common/lib/BlockDecoder.js
 export type MSPConfig = {
     name: string;
-    root_certs: string[];
-    intermediate_certs: string[];
-    admins: string[];
-    revocation_list: string[];
+    root_certs: Buffer[];
+    intermediate_certs: Buffer[];
+    admins: Buffer[];
+    revocation_list: Buffer[];
     signing_identity: SigningIdentityInfo;
-    organizational_unit_identifiers: FabricOUIdentifier;
-    crypto_config: FabricCryptoConfig;
-    tls_root_certs: string[];
-    tls_intermediate_certs: string[];
-    fabric_node_ous: FabricNodeOUs;
+    organizational_unit_identifiers: FabricOUIdentifier[];
+    tls_root_certs: Buffer[];
+    tls_intermediate_certs: Buffer[];
 };

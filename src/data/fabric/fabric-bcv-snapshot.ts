@@ -1,3 +1,4 @@
+import { deserializeConfigTxInfo, serializeConfigTxInfo } from ".";
 import { BCVerifierError, HashValueType } from "../../common";
 import { KeyValueManagerInitialState } from "../../kvmanager";
 import { BCVKVSnapshotContext, BCVSnapshot, BCVSnapshotData } from "../../snapshot";
@@ -6,7 +7,7 @@ import { FabricBlock, FabricConfigTransactionInfo, FabricTransaction } from "./f
 export interface FabricBCVSnapshotBlockInformation {
     hashForSelf: string;
     hashForPrev: string;
-    lastConfigBlock: FabricConfigTransactionInfo;
+    lastConfigBlock: any;
 }
 export interface FabricBCVSnapshotKV {
     key: string;
@@ -18,10 +19,10 @@ export type FabricBCVSnapshotStateInformation = FabricBCVSnapshotKV[];
 export interface FabricBCVSnapshotContext extends BCVKVSnapshotContext {
     block: FabricBlock;
     transaction: FabricTransaction;
-    configBlock: FabricBlock;
+    configInfo: FabricConfigTransactionInfo;
 }
 
-interface FabricBCVSnapshotData extends BCVSnapshotData {
+export interface FabricBCVSnapshotData extends BCVSnapshotData {
     blockInformation: FabricBCVSnapshotBlockInformation;
     stateInformation?: FabricBCVSnapshotStateInformation;
 }
@@ -50,7 +51,7 @@ export class FabricBCVSnapshot extends BCVSnapshot {
             blockInformation: {
                 hashForSelf: this.context.block.calcHashValue(HashValueType.HASH_FOR_SELF).toString("hex"),
                 hashForPrev: this.context.block.calcHashValue(HashValueType.HASH_FOR_PREV).toString("hex"),
-                lastConfigBlock: this.context.configBlock.getConfigTxInfo()
+                lastConfigBlock: serializeConfigTxInfo(this.context.configInfo)
             },
             stateInformation: keys.map((keyValue) => ({
                 key: keyValue.getKey().toString("hex"),
@@ -75,5 +76,13 @@ export class FabricBCVSnapshot extends BCVSnapshot {
                 version: Buffer.from(kv.version, "hex")
             }))
         };
+    }
+
+    public getLastConfigBlockInfo(): FabricConfigTransactionInfo {
+        const info: FabricBCVSnapshotBlockInformation = this.data.blockInformation;
+        if (info == null) {
+            throw new Error("Snapshot does not contain valid block information");
+        }
+        return deserializeConfigTxInfo(info.lastConfigBlock);
     }
 }

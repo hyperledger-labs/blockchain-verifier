@@ -7,8 +7,9 @@ import { AppStateCheckLogic, AppTransactionCheckLogic, BlockCheckPlugin, Transac
 import { BCVerifierError, BCVerifierNotImplemented, KeyValueTransaction, Transaction,
          VerificationConfig, VerificationResult } from "./common";
 import { DataModelType, NetworkPlugin } from "./network-plugin";
-import { BlockProvider, KeyValueBlockProvider } from "./provider";
+import { BlockProvider, KeyValueBlockProvider, KeyValueProviderOptions } from "./provider";
 import { ResultSet } from "./result-set";
+import { BCVSnapshot } from "./snapshot";
 
 import FabricBlock from "./network/fabric-block";
 import FabricQuery from "./network/fabric-query";
@@ -20,8 +21,8 @@ import FabricTransactionChecker from "./check/fabric-transaction-check";
 import MultipleLedgerChecker from "./check/multiple-ledgers";
 
 type NetworkPluginInfo = { pluginName: string, module: new (configString: string) => NetworkPlugin };
-type BlockCheckPluginInfo =  { pluginName: string, module: new (provider: BlockProvider, resultSet: ResultSet) => BlockCheckPlugin };
-type TransactionCheckPluginInfo = { pluginName: string, module: new (provider: BlockProvider, resultSet: ResultSet) => TransactionCheckPlugin };
+type BlockCheckPluginInfo =  { pluginName: string, module: new (provider: BlockProvider, resultSet: ResultSet, snapshot?: BCVSnapshot) => BlockCheckPlugin };
+type TransactionCheckPluginInfo = { pluginName: string, module: new (provider: BlockProvider, resultSet: ResultSet, snapshot?: BCVSnapshot) => TransactionCheckPlugin };
 type MultipleLedgerCheckPluginInfo =  { pluginName: string, module: new (provider: BlockProvider, others: BlockProvider[], resultSet: ResultSet) => BlockCheckPlugin };
 
 const networkPlugins: NetworkPluginInfo[] = [
@@ -73,29 +74,50 @@ export class BCVerifier {
             throw new BCVerifierError("Failed to initialize network plugin");
         }
 
-        const appCheck = this.config.applicationCheckers.length > 0 || this.config.saveSnapshot != null;
+        const appCheck = this.config.applicationCheckers.length > 0 || this.config.saveSnapshot === true;
+        let snapshot: BCVSnapshot | undefined = undefined;
+        let firstBlock = 0;
+        if (this.config.snapshotToResume != null) {
+            snapshot = this.network.loadFromSnapshot(this.config.snapshotToResume);
+            firstBlock = snapshot.getLastBlock() + 1;
+        }
 
         const blockSource = await this.network.getPreferredBlockSource();
         let blockProvider: BlockProvider;
         if (appCheck === true && this.network.getDataModelType() === DataModelType.KeyValue) {
-            blockProvider = new KeyValueBlockProvider(blockSource);
+            const opts: KeyValueProviderOptions = {};
+            if (snapshot != null) {
+                opts.initialState = await snapshot.getInitialKVState();
+            }
+
+            blockProvider = new KeyValueBlockProvider(blockSource, opts);
         } else {
             blockProvider = new BlockProvider(blockSource);
         }
 
         const blockHeight = await blockSource.getBlockHeight();
-        await blockProvider.cacheBlockRange(0, blockHeight - 1);
+        let lastBlock = blockHeight - 1;
+        if (firstBlock >= blockHeight) {
+            throw new BCVerifierError("No block to inspect");
+        }
+        if (this.config.endBlock != null) {
+            if (lastBlock > this.config.endBlock) {
+                lastBlock = this.config.endBlock;
+            }
+        }
+
+        await blockProvider.cacheBlockRange(firstBlock, lastBlock);
 
         const blockCheckPlugins: BlockCheckPlugin[] = [];
         for (const info of blockVerifiers) {
             if (!this.config.checkersToExclude.includes(info.pluginName)) {
-                blockCheckPlugins.push(new info.module(blockProvider, this.resultSet));
+                blockCheckPlugins.push(new info.module(blockProvider, this.resultSet, snapshot));
             }
         }
         const txCheckPlugins: TransactionCheckPlugin[] = [];
         for (const info of txVerifiers) {
             if (!this.config.checkersToExclude.includes(info.pluginName)) {
-                txCheckPlugins.push(new info.module(blockProvider, this.resultSet));
+                txCheckPlugins.push(new info.module(blockProvider, this.resultSet, snapshot));
             }
         }
 
@@ -134,7 +156,7 @@ export class BCVerifier {
         }
 
         let lastTx: Transaction | null = null;
-        for (let i = 0; i < blockHeight; i++) {
+        for (let i = firstBlock; i <= lastBlock; i++) {
             const b = await blockProvider.getBlock(i);
 
             for (const v of blockCheckPlugins) {
@@ -171,7 +193,7 @@ export class BCVerifier {
                 }
             }
 
-            for (let i = 0; i < blockHeight; i++) {
+            for (let i = firstBlock; i <= lastBlock; i++) {
                 const b = await blockProvider.getBlock(i);
                 for (const tx of b.getTransactions()) {
                     const appTx = kvProvider.getAppTransaction(tx.getTransactionID());
@@ -188,7 +210,7 @@ export class BCVerifier {
             resultSet: this.resultSet
         };
 
-        if (this.config.saveSnapshot != null && lastTx != null) {
+        if (this.config.saveSnapshot === true && lastTx != null) {
             result.snapshotData = await this.network.createSnapshot(blockProvider, lastTx);
         }
 

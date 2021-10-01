@@ -6,7 +6,7 @@
 
 import { BCVerifierError, BCVerifierNotImplemented, Block,
          KeyValueBlock,  KeyValueState, KeyValueTransaction, Transaction } from "./common";
-import { KeyValueManager, KeyValueManagerBlockNotSufficientError, SimpleKeyValueManager } from "./kvmanager";
+import { KeyValueManager, KeyValueManagerBlockNotSufficientError, KeyValueManagerInitialState, SimpleKeyValueManager } from "./kvmanager";
 import { BlockSource } from "./network-plugin";
 
 // Simple in-memory cacher
@@ -107,12 +107,20 @@ export class BlockProvider {
     }
 }
 
+export interface KeyValueProviderOptions {
+    initialState?: KeyValueManagerInitialState;
+}
+
 export class KeyValueBlockProvider extends BlockProvider {
     protected keyValueManager: KeyValueManager;
 
-    constructor(source: BlockSource) {
+    constructor(source: BlockSource, opts?: KeyValueProviderOptions) {
         super(source);
-        this.keyValueManager = new SimpleKeyValueManager();
+        if (opts == null) {
+            this.keyValueManager = new SimpleKeyValueManager();
+        } else {
+            this.keyValueManager = new SimpleKeyValueManager(opts.initialState);
+        }
     }
 
     public async getKeyValueState(tx: KeyValueTransaction): Promise<KeyValueState> {

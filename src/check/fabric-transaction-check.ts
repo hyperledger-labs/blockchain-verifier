@@ -7,33 +7,14 @@
 import { format } from "util";
 
 import { TransactionCheckPlugin } from ".";
-import { BCVerifierError, ResultPredicate } from "../common";
-import { FabricAction, FabricBlock, FabricConfigTransactionInfo, FabricMetaDataIndex, FabricPrivateRWSet,
+import { BCVSnapshot } from "..";
+import { ResultPredicate } from "../common";
+import { FabricAction, FabricConfigTransactionInfo, FabricMetaDataIndex, FabricPrivateRWSet,
          FabricTransaction, verifyIdentityMSP, verifySignature, verifySignatureHeader } from "../data/fabric";
+import { FabricBCVSnapshot } from "../data/fabric/fabric-bcv-snapshot";
+import { FabricConfigCache } from "../data/fabric/fabric-utils";
 import { BlockProvider } from "../provider";
 import { ResultSet, TransactionResultPusher } from "../result-set";
-
-export class FabricConfigCache {
-    private configMap: { [configBlockNumber: number]: FabricConfigTransactionInfo };
-    private provider: BlockProvider;
-
-    constructor(provider: BlockProvider) {
-        this.configMap = {};
-        this.provider = provider;
-    }
-
-    public async getConfig(blockNumber: number): Promise<FabricConfigTransactionInfo> {
-        if (this.configMap[blockNumber] == null) {
-            const configBlock = await this.provider.getBlock(blockNumber);
-
-            if (!(configBlock instanceof FabricBlock)) {
-                throw new BCVerifierError("Provider does not return FabricBlock");
-            }
-            this.configMap[blockNumber] = configBlock.getConfigTxInfo();
-        }
-        return this.configMap[blockNumber];
-    }
-}
 
 export default class FabricTransactionIntegrityChecker implements TransactionCheckPlugin {
     public checkerName = "FabricTransactionIntegrityChecker";
@@ -41,10 +22,16 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
     private config: FabricConfigCache;
     private results: TransactionResultPusher;
 
-    constructor(provider: BlockProvider, resultSet: ResultSet) {
+    constructor(provider: BlockProvider, resultSet: ResultSet, snapshot?: BCVSnapshot) {
         this.provider = provider;
-        this.config = new FabricConfigCache(provider);
         this.results = new TransactionResultPusher(this.checkerName, resultSet);
+
+        if (snapshot != null) {
+            const fabricSnapshot = snapshot as FabricBCVSnapshot;
+            this.config = FabricConfigCache.Init(provider, fabricSnapshot);
+        } else {
+            this.config = FabricConfigCache.Init(provider);
+        }
     }
 
     public async performCheck(transactionID: string): Promise<void> {
