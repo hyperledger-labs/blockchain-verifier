@@ -16,6 +16,8 @@ export interface VerificationConfig {
 
     saveSnapshot: boolean;
     snapshotToResume?: BCVSnapshotData;
+
+    endBlock?: number;
 }
 
 export interface VerificationResult {

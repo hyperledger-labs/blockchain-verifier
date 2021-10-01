@@ -7,20 +7,30 @@
  */
 import { common } from "fabric-protos";
 import { BlockCheckPlugin } from ".";
-import { BCVerifierError, ResultPredicate } from "../common";
-import { FabricBlock, FabricMetaDataIndex, FabricTransaction, getOrdererMSPs,
-         verifyMetadataSignature, verifySignatureHeader } from "../data/fabric";
+import { BCVSnapshot } from "..";
+import { ResultPredicate } from "../common";
+import { FabricBlock, FabricConfigTransactionInfo, FabricMetaDataIndex, verifyMetadataSignature, verifySignatureHeader } from "../data/fabric";
+import { FabricBCVSnapshot } from "../data/fabric/fabric-bcv-snapshot";
+import { FabricConfigCache } from "../data/fabric/fabric-utils";
 import { BlockProvider } from "../provider";
 import { BlockResultPusher, ResultSet } from "../result-set";
 
 export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
     public checkerName = "FabricBlockIntegrityChecker";
     private provider: BlockProvider;
+    private config: FabricConfigCache;
     private results: BlockResultPusher;
 
-    constructor(provider: BlockProvider, resultSet: ResultSet) {
+    constructor(provider: BlockProvider, resultSet: ResultSet, snapshot?: BCVSnapshot) {
         this.provider = provider;
         this.results = new BlockResultPusher(this.checkerName, resultSet);
+
+        if (snapshot != null) {
+            const fabricSnapshot = snapshot as FabricBCVSnapshot;
+            this.config = FabricConfigCache.Init(provider, fabricSnapshot);
+        } else {
+            this.config = FabricConfigCache.Init(provider);
+        }
     }
 
     public async performCheck(blockNumber: number): Promise<void> {
@@ -33,9 +43,9 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
             return;
         }
 
-        const configTx = await this.checkLastConfig(block);
+        const configInfo = await this.checkLastConfig(block);
 
-        await this.checkMetadataSignature(block, configTx);
+        await this.checkMetadataSignature(block, configInfo);
     }
 
     private checkLastConfigIndex(index: number, block: FabricBlock): void {
@@ -45,7 +55,7 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
             { name: block + ".Number", value: block.getBlockNumber() });
     }
 
-    private async checkLastConfig(block: FabricBlock): Promise<FabricTransaction> {
+    private async checkLastConfig(block: FabricBlock): Promise<FabricConfigTransactionInfo> {
         const index = block.getLastConfigBlockIndex();
         // XXX: Better to use raw value due to different implementation of encoding zero
         // https://github.com/protobufjs/protobuf.js/issues/1138
@@ -70,12 +80,8 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
             );
         }
 
-        const lastConfigBlock = await this.provider.getBlock(index);
-        if (!(lastConfigBlock instanceof FabricBlock)) {
-            throw new BCVerifierError("config block is not FabricBlock");
-        }
-        const configTx = lastConfigBlock.getConfigTx();
-        const ordererMSPs = getOrdererMSPs(configTx);
+        const configInfo = await this.config.getConfig(index);
+        const ordererMSPs = configInfo.ordererMSPs;
 
         for (const i in lastConfig.signatures) {
             const signature = lastConfig.signatures[i];
@@ -86,15 +92,15 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
                                               { name: "VerifySignatureHeader", value: verifySignatureHeader },
                                               { name: block + ".Metadata[1].Signature.Creator",
                                                 value: signature.signature_header },
-                                              { name: configTx + ".Config.OrdererMSPs", value: ordererMSPs });
+                                              { name: configInfo.transactionId + ".Config.OrdererMSPs", value: ordererMSPs });
         }
 
-        return configTx;
+        return configInfo;
     }
 
-    private async checkMetadataSignature(block: FabricBlock, configTx: FabricTransaction): Promise<void> {
+    private async checkMetadataSignature(block: FabricBlock, configInfo: FabricConfigTransactionInfo): Promise<void> {
         const signatures = block.getMetaData(FabricMetaDataIndex.SIGNATURES);
-        const ordererMSPs = getOrdererMSPs(configTx);
+        const ordererMSPs = configInfo.ordererMSPs;
 
         for (const i in signatures.signatures) {
             const signature = signatures.signatures[i];
@@ -111,7 +117,7 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
                 ResultPredicate.INVOKE,
                 { name: "VerifySignatureHeader", value: verifySignatureHeader },
                 { name: block + ".Metadata[1].Signature.Creator", value: signature.signature_header },
-                { name: configTx + ".Config.OrdererMSPs", value: ordererMSPs }
+                { name: configInfo.transactionId + ".Config.OrdererMSPs", value: ordererMSPs }
             );
         }
     }

@@ -57,6 +57,10 @@ export abstract class BCVSnapshot {
         }
     }
 
+    public getLastBlock() {
+        return this.data.lastBlock;
+    }
+
     public abstract getInitialKVState(): Promise<KeyValueManagerInitialState | undefined>;
 
     public abstract getSnapshot(): Promise<BCVSnapshotData>;

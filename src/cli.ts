@@ -7,7 +7,7 @@
 /* eslint-disable no-console */
 
 import { Command } from "commander";
-import { writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { BCVerifier } from "./bcverifier";
 import { BCVerifierError } from "./common";
 import { JSONOutput } from "./output/json";
@@ -24,7 +24,7 @@ function list(val: string): string[] {
 
 const program = new Command();
 
-program.version("v0.3.1")
+program.version("v0.4.0")
     .description("Blockchain Verifier CLI")
     .option("-n, --network-type <type>", "Network type")
     .option("-c, --network-config <config>", "Config for network")
@@ -33,6 +33,7 @@ program.version("v0.3.1")
     .option("-x, --exclude-checkers <checkers>", "Name of checkers to exclude", list)
     .option("-s, --save-snapshot <snapshot>", "Save snapshot after checks")
     .option("-r, --resume-snapshot <snapshot>", "Resume checks from snapshot")
+    .option("-e, --end-block <end block>", "Stop the checks at the specified block (inclusive)")
     .arguments("<command>")
     .action((command) => {
         cliCommand = command;
@@ -78,13 +79,19 @@ async function start(): Promise<number> {
         checkersToExclude = opts.excludeCheckers;
     }
     const saveSnapshot = opts.saveSnapshot == null ? false : true;
+    let resumeData;
+    if (opts.resumeSnapshot != null) {
+        resumeData = JSON.parse(readFileSync(opts.resumeSnapshot).toString("utf-8"));
+    }
 
     const bcv = new BCVerifier({
         networkType: opts.networkType,
         networkConfig: opts.networkConfig,
         applicationCheckers: applicationCheckers,
         checkersToExclude: checkersToExclude,
-        saveSnapshot: saveSnapshot
+        saveSnapshot: saveSnapshot,
+        snapshotToResume: resumeData,
+        endBlock: opts.endBlock
     });
 
     const { resultSet, snapshotData } = await bcv.verify();

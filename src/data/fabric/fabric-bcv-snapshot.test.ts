@@ -16,12 +16,11 @@ describe("FabricBCVSnapshot", () => {
         getBlock: () => mockLastBlock,
         getTransactionID: () => "tx-id-for-last"
     };
-    const mockLastConfigBlock = {
-        getBlockNumber: () => 24,
-        getConfigTxInfo: () => ({
-            blockNumber: 24,
-            transactionID: "tx-id-for-configtx"
-        })
+    const mockLastConfigInfo = {
+        blockNumber: 24,
+        transactionId: "tx-id-for-configtx",
+        applicationMSPs: [],
+        ordererMSPs: [],
     };
     const mockState = {
         getKeys: () => [{
@@ -34,7 +33,7 @@ describe("FabricBCVSnapshot", () => {
     const context: FabricBCVSnapshotContext = {
         block: mockLastBlock as any,
         transaction: mockLastTransaction as any,
-        configBlock: mockLastConfigBlock as any,
+        configInfo: mockLastConfigInfo,
         state: mockState as any,
         timestamp: now
     };

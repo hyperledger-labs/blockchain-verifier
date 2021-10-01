@@ -6,7 +6,7 @@
 
 import { Block, Transaction } from "./common";
 import { BlockProvider } from "./provider";
-import { BCVSnapshotData } from "./snapshot";
+import { BCVSnapshot, BCVSnapshotData } from "./snapshot";
 
 export interface BlockSource {
     getSourceID(): string;
@@ -31,4 +31,5 @@ export interface NetworkPlugin {
     getPreferredBlockSource(): Promise<BlockSource>;
     getDataModelType(): DataModelType;
     createSnapshot(provider: BlockProvider, transaction: Transaction): Promise<BCVSnapshotData>;
+    loadFromSnapshot(data: BCVSnapshotData): BCVSnapshot;
 }

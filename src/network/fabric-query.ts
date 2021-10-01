@@ -9,10 +9,11 @@ import * as fs from "fs";
 import * as util from "util";
 import { BCVerifierError, Transaction } from "../common";
 import { FabricBlock, FabricTransaction } from "../data/fabric";
-import { FabricBCVSnapshot } from "../data/fabric/fabric-bcv-snapshot";
+import { FabricBCVSnapshot, FabricBCVSnapshotData } from "../data/fabric/fabric-bcv-snapshot";
+import { FabricConfigCache } from "../data/fabric/fabric-utils";
 import { BlockSource, DataModelType, NetworkPlugin } from "../network-plugin";
 import { BlockProvider, KeyValueBlockProvider } from "../provider";
-import { BCVSnapshotData } from "../snapshot";
+import { BCVSnapshot, BCVSnapshotData } from "../snapshot";
 
 type FabricQueryPluginClientConfig = {
     mspID: string;
@@ -177,17 +178,23 @@ export default class FabricQueryPlugin implements NetworkPlugin {
 
         const lastBlock = fabricTransaction.getBlock();
         const configBlockIndex = lastBlock.getLastConfigBlockIndex();
-        const configBlock = await kvProvider.getBlock(configBlockIndex) as FabricBlock;
+        const configInfo = await FabricConfigCache.GetInstance().getConfig(configBlockIndex);
         const state = await kvProvider.getKeyValueState(fabricTransaction);
 
         const snapshot = new FabricBCVSnapshot("fabric-query", null, {
             block: lastBlock,
-            configBlock: configBlock,
+            configInfo: configInfo,
             transaction: fabricTransaction,
             state: state,
             timestamp: Date.now(),
         });
 
         return await snapshot.getSnapshot();
+    }
+
+    public loadFromSnapshot(data: BCVSnapshotData): BCVSnapshot {
+        const fabricSnapshotData = data as FabricBCVSnapshotData;
+
+        return new FabricBCVSnapshot("fabric-block", fabricSnapshotData);
     }
 }
