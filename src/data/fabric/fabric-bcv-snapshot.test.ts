@@ -61,9 +61,13 @@ describe("FabricBCVSnapshot", () => {
         expect(Buffer.from(data.blockInformation.hashForPrev, "hex").toString("utf-8")).toBe("test-hash-for-prev");
         expect(Buffer.from(data.blockInformation.hashForSelf, "hex").toString("utf-8")).toBe("test-hash-for-self");
         expect(data.blockInformation.lastConfigBlock.blockNumber).toBe(24);
-        expect(data.stateInformation).toHaveLength(1);
-        expect(Buffer.from(data.stateInformation[0].key, "hex").toString("utf-8")).toBe("KEY0123");
-        expect(Buffer.from(data.stateInformation[0].value, "hex").toString("utf-8")).toBe("VALUE0123");
-        expect(Buffer.from(data.stateInformation[0].version, "hex").toString("utf-8")).toBe("VERSION0123");
+
+        expect(data).toHaveProperty("stateInformation");
+        if(data.stateInformation != null) { // Condition to satisfy the compiler
+            expect(data.stateInformation).toHaveLength(1);
+            expect(Buffer.from(data.stateInformation[0].key, "hex").toString("utf-8")).toBe("KEY0123");
+            expect(Buffer.from(data.stateInformation[0].value, "hex").toString("utf-8")).toBe("VALUE0123");
+            expect(Buffer.from(data.stateInformation[0].version, "hex").toString("utf-8")).toBe("VERSION0123");
+        }
     });
 });

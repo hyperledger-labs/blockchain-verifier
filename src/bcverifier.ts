@@ -10,34 +10,49 @@ import { DataModelType, NetworkPlugin } from "./network-plugin";
 import { BlockProvider, KeyValueBlockProvider } from "./provider";
 import { ResultSet } from "./result-set";
 
-type PluginInfo = { pluginName: string, moduleName: string };
+import FabricBlock from "./network/fabric-block";
+import FabricQuery from "./network/fabric-query";
+import FabricQuery2 from "./network/fabric-query2";
 
-const networkPlugins: PluginInfo[] = [
-    { pluginName: "fabric-block", moduleName: "./network/fabric-block" },
-    { pluginName: "fabric-query", moduleName: "./network/fabric-query" },
-    { pluginName: "fabric-query2", moduleName: "./network/fabric-query2" }
+import GenericBlockChecker from "./check/block-integrity";
+import FabricBlockChecker from "./check/fabric-block-check";
+import FabricTransactionChecker from "./check/fabric-transaction-check";
+import MultipleLedgerChecker from "./check/multiple-ledgers";
+
+type NetworkPluginInfo = { pluginName: string, module: new (configString: string) => NetworkPlugin };
+type BlockCheckPluginInfo =  { pluginName: string, module: new (provider: BlockProvider, resultSet: ResultSet) => BlockCheckPlugin };
+type TransactionCheckPluginInfo = { pluginName: string, module: new (provider: BlockProvider, resultSet: ResultSet) => TransactionCheckPlugin };
+type MultipleLedgerCheckPluginInfo =  { pluginName: string, module: new (provider: BlockProvider, others: BlockProvider[], resultSet: ResultSet) => BlockCheckPlugin };
+
+const networkPlugins: NetworkPluginInfo[] = [
+    { pluginName: "fabric-block", module: FabricBlock },
+    { pluginName: "fabric-query", module: FabricQuery },
+    { pluginName: "fabric-query2", module: FabricQuery2 }
 ];
-const blockVerifiers: PluginInfo[] = [
-    { pluginName: "generic-block", moduleName: "./check/block-integrity" },
-    { pluginName: "fabric-block", moduleName: "./check/fabric-block-check" }
+
+const blockVerifiers: BlockCheckPluginInfo[] = [
+    { pluginName: "generic-block", module: GenericBlockChecker },
+    { pluginName: "fabric-block", module: FabricBlockChecker }
 ];
-const txVerifiers: PluginInfo[] = [
-    { pluginName: "fabric-transaction", moduleName: "./check/fabric-transaction-check" }
+
+const txVerifiers: TransactionCheckPluginInfo[] = [
+    { pluginName: "fabric-transaction", module: FabricTransactionChecker }
 ];
-const multipleLedgerVerifiers: PluginInfo[] = [
-    { pluginName: "multiple-ledgers", moduleName: "./check/multiple-ledgers" }
+
+const multipleLedgerVerifiers: MultipleLedgerCheckPluginInfo[] = [
+    { pluginName: "multiple-ledgers", module: MultipleLedgerChecker }
 ];
 
 export class BCVerifier {
     public static getAvailableNetwork(): string[] {
-        return networkPlugins.map((p) => p.moduleName);
+        return networkPlugins.map((p) => p.pluginName);
     }
 
     private config: VerificationConfig;
     private network?: NetworkPlugin;
     private resultSet: ResultSet;
 
-    private networkPlugin: PluginInfo;
+    private networkPlugin: NetworkPluginInfo;
 
     constructor(config: VerificationConfig) {
         this.config = config;
@@ -52,8 +67,7 @@ export class BCVerifier {
     }
 
     public async verify(): Promise<VerificationResult> {
-        const networkPluginModule = await import(this.networkPlugin.moduleName);
-        this.network = new networkPluginModule.default(this.config.networkConfig);
+        this.network = new this.networkPlugin.module(this.config.networkConfig);
 
         if (this.network == null) {
             throw new BCVerifierError("Failed to initialize network plugin");
@@ -75,15 +89,13 @@ export class BCVerifier {
         const blockCheckPlugins: BlockCheckPlugin[] = [];
         for (const info of blockVerifiers) {
             if (!this.config.checkersToExclude.includes(info.pluginName)) {
-                const verifierModule = await import(info.moduleName);
-                blockCheckPlugins.push(new verifierModule.default(blockProvider, this.resultSet));
+                blockCheckPlugins.push(new info.module(blockProvider, this.resultSet));
             }
         }
         const txCheckPlugins: TransactionCheckPlugin[] = [];
         for (const info of txVerifiers) {
             if (!this.config.checkersToExclude.includes(info.pluginName)) {
-                const verifierModule = await import(info.moduleName);
-                txCheckPlugins.push(new verifierModule.default(blockProvider, this.resultSet));
+                txCheckPlugins.push(new info.module(blockProvider, this.resultSet));
             }
         }
 
@@ -102,8 +114,7 @@ export class BCVerifier {
         const multipleBlockCheckPlugins: BlockCheckPlugin[] = [];
         for (const info of multipleLedgerVerifiers) {
             if (!this.config.checkersToExclude.includes(info.pluginName)) {
-                const verifierModule = await import(info.moduleName);
-                multipleBlockCheckPlugins.push(new verifierModule.default(preferredProvider, otherProviders, this.resultSet));
+                multipleBlockCheckPlugins.push(new info.module(preferredProvider, otherProviders, this.resultSet));
             }
         }
 
