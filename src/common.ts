@@ -15,6 +15,7 @@ export interface VerificationConfig {
     checkersToExclude: string[];
 
     saveSnapshot: boolean;
+    skipKeyValue: boolean;
     snapshotToResume?: BCVSnapshotData;
 
     endBlock?: number;

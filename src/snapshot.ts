@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BCVerifierError, Block, KeyValueBlock, KeyValueState, KeyValueTransaction, Transaction } from "./common";
+import { BCVerifierError, Block, KeyValueState, Transaction } from "./common";
 import { KeyValueManagerInitialState } from "./kvmanager";
 
 export interface BCVSnapshotData {
@@ -26,11 +26,7 @@ export interface BCVSnapshotContext {
     block: Block;
     transaction: Transaction;
     timestamp: number | null;
-}
-export interface BCVKVSnapshotContext extends BCVSnapshotContext {
-    block: KeyValueBlock;
-    transaction: KeyValueTransaction;
-    state: KeyValueState;
+    state?: KeyValueState;
 }
 
 export abstract class BCVSnapshot {

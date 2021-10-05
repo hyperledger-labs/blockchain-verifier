@@ -74,7 +74,10 @@ export class BCVerifier {
             throw new BCVerifierError("Failed to initialize network plugin");
         }
 
-        const appCheck = this.config.applicationCheckers.length > 0 || this.config.saveSnapshot === true;
+        // Key-value processing can be skipped only if
+        //   1) No application checker is specified AND
+        //   2a) Snapshot is not to be saved OR 2b) --skip-key-value option is specified
+        const skipKV = this.config.applicationCheckers.length === 0 && (this.config.saveSnapshot !== true || this.config.skipKeyValue === true);
         let snapshot: BCVSnapshot | undefined = undefined;
         let firstBlock = 0;
         if (this.config.snapshotToResume != null) {
@@ -84,10 +87,13 @@ export class BCVerifier {
 
         const blockSource = await this.network.getPreferredBlockSource();
         let blockProvider: BlockProvider;
-        if (appCheck === true && this.network.getDataModelType() === DataModelType.KeyValue) {
+        if (this.network.getDataModelType() === DataModelType.KeyValue && !skipKV) {
             const opts: KeyValueProviderOptions = {};
             if (snapshot != null) {
                 opts.initialState = await snapshot.getInitialKVState();
+                if (opts.initialState == null) {
+                    throw new BCVerifierError("Snapshot does not contain key-value information");
+                }
             }
 
             blockProvider = new KeyValueBlockProvider(blockSource, opts);
@@ -126,7 +132,7 @@ export class BCVerifier {
         const dataModelType = this.network.getDataModelType();
         const otherProviders = allSources.filter((s) => s.getSourceID() !== preferredProvider.getSourceID())
             .map((s) => {
-                if (appCheck === true && dataModelType === DataModelType.KeyValue) {
+                if (dataModelType === DataModelType.KeyValue && !skipKV) {
                     return new KeyValueBlockProvider(s);
                 } else {
                     return new BlockProvider(s);
@@ -177,7 +183,7 @@ export class BCVerifier {
             }
         }
 
-        if (lastTx != null && appCheck && this.network.getDataModelType() === DataModelType.KeyValue) {
+        if (lastTx != null && this.network.getDataModelType() === DataModelType.KeyValue && !skipKV) {
             const kvProvider = blockProvider as KeyValueBlockProvider;
             const lastKeyValueTx = lastTx as KeyValueTransaction;
             try {

@@ -1,7 +1,7 @@
 import { deserializeConfigTxInfo, serializeConfigTxInfo } from ".";
 import { BCVerifierError, HashValueType } from "../../common";
 import { KeyValueManagerInitialState } from "../../kvmanager";
-import { BCVKVSnapshotContext, BCVSnapshot, BCVSnapshotData } from "../../snapshot";
+import { BCVSnapshot, BCVSnapshotContext, BCVSnapshotData } from "../../snapshot";
 import { FabricBlock, FabricConfigTransactionInfo, FabricTransaction } from "./fabric-data";
 
 export interface FabricBCVSnapshotBlockInformation {
@@ -16,7 +16,7 @@ export interface FabricBCVSnapshotKV {
 }
 export type FabricBCVSnapshotStateInformation = FabricBCVSnapshotKV[];
 
-export interface FabricBCVSnapshotContext extends BCVKVSnapshotContext {
+export interface FabricBCVSnapshotContext extends BCVSnapshotContext {
     block: FabricBlock;
     transaction: FabricTransaction;
     configInfo: FabricConfigTransactionInfo;
@@ -44,27 +44,32 @@ export class FabricBCVSnapshot extends BCVSnapshot {
         if (this.context == null) {
             throw new BCVerifierError("No context is set. Snapshot cannot be generated");
         }
-        const keys = this.context.state.getKeys();
 
-        return {
+        const data: FabricBCVSnapshotData = {
             ...this.data,
             blockInformation: {
                 hashForSelf: this.context.block.calcHashValue(HashValueType.HASH_FOR_SELF).toString("hex"),
                 hashForPrev: this.context.block.calcHashValue(HashValueType.HASH_FOR_PREV).toString("hex"),
                 lastConfigBlock: serializeConfigTxInfo(this.context.configInfo)
-            },
-            stateInformation: keys.map((keyValue) => ({
+            }
+        };
+
+        if (this.context.state != null) {
+            const keys = this.context.state.getKeys();
+            data.stateInformation = keys.map((keyValue) => ({
                 key: keyValue.getKey().toString("hex"),
                 value: keyValue.getValue().toString("hex"),
                 version: keyValue.getVersion().toString("hex")
-            }))
-        };
+            }));
+        }
+
+        return data;
     }
 
-    public async getInitialKVState(): Promise<KeyValueManagerInitialState> {
+    public async getInitialKVState(): Promise<KeyValueManagerInitialState | undefined> {
         const state: FabricBCVSnapshotStateInformation = this.data.stateInformation;
         if (state == null) {
-            throw new Error("Snapshot does not contain valid state information");
+            return undefined;
         }
 
         return {
