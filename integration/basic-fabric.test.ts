@@ -178,9 +178,11 @@ describe.each<TestConfig>([
     { version: "2.2.3", startNetwork: startNetworkV22 },
     { version: "2.3.2", startNetwork: startNetworkV23 },
 ])("Hyperledger Fabric $version", ({version, startNetwork}) => {
+
     beforeAll(async () => {
         await startNetwork(version);
     });
+
     afterAll(async() => {
         try {
             execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
@@ -308,5 +310,174 @@ describe.each<TestConfig>([
         expect(allCount.failed).toBe(0);
 
         expect(countResults(results, CheckTarget.Block, CHECKER_ID_BLOCK_HASH_COMPARISON).total).toBeGreaterThan(0);
+    });
+
+    /* Testing snapshot feature */
+    test("fabric-query2 runs successfully with saving snapshot up to block #5", async () => {
+        const resultJSON = path.join(artifactDir("peer0.org1.example.com"), "result.fabric-query.snapshot5.json");
+        const queryConfigJSON = path.join(artifactDir("peer0.org1.example.com"), "fabric-query-config.json");
+        const snapshotJSON = path.join(artifactDir("peer0.org1.example.com"), "snapshot.fabric-query.block5.json");
+
+        fs.writeFileSync(queryConfigJSON, JSON.stringify({
+            ...fabricQueryConfig,
+            peer: fabricQueryPeerConfigs[0]
+        }));
+
+        expect(() => {
+            execFileSync(cliPath(),
+                [
+                    "start",
+                    "-n", "fabric-query2",
+                    "-c", queryConfigJSON,
+                    "-o", resultJSON,
+                    "-s", snapshotJSON,
+                    "-e", "5"
+                ], execOptions);
+        }).not.toThrow();
+
+        const results = JSON.parse(fs.readFileSync(resultJSON).toString("utf-8"));
+        const allCount = countResults(results);
+
+        expect(allCount.total).toBeGreaterThan(0);
+        expect(allCount.failed).toBe(0);
+        // Should check only blocks #0 through #5
+        expect(results.blocks).toHaveLength(6);
+
+        const snapshot = JSON.parse(fs.readFileSync(snapshotJSON).toString("utf-8"));
+        expect(snapshot.lastBlock).toBe(5);
+        expect(snapshot.stateInformation).toHaveLength(5);
+    });
+
+    test("fabric-query2 runs successfully by resuming from snapshot at block #5", async () => {
+        const resultJSON = path.join(artifactDir("peer0.org1.example.com"), "result.fabric-query.resume.json");
+        const queryConfigJSON = path.join(artifactDir("peer0.org1.example.com"), "fabric-query-config.json");
+        const snapshotJSON = path.join(artifactDir("peer0.org1.example.com"), "snapshot.fabric-query.block5.json");
+        const newSnapshotJSON = path.join(artifactDir("peer0.org1.example.com"), "snapshot.fabric-query.block7.json");
+
+        fs.writeFileSync(queryConfigJSON, JSON.stringify({
+            ...fabricQueryConfig,
+            peer: fabricQueryPeerConfigs[0]
+        }));
+
+        expect(() => {
+            execFileSync(cliPath(),
+                [
+                    "start",
+                    "-n", "fabric-query2",
+                    "-c", queryConfigJSON,
+                    "-o", resultJSON,
+                    "-r", snapshotJSON,
+                    "-s", newSnapshotJSON
+                ], execOptions);
+        }).not.toThrow();
+
+        const results = JSON.parse(fs.readFileSync(resultJSON).toString("utf-8"));
+        const allCount = countResults(results);
+
+        expect(allCount.total).toBeGreaterThan(0);
+        expect(allCount.failed).toBe(0);
+        // Should check only blocks #6 and #7
+        expect(results.blocks).toHaveLength(2);
+
+        const snapshot = JSON.parse(fs.readFileSync(newSnapshotJSON).toString("utf-8"));
+        expect(snapshot.lastBlock).toBe(7);
+        expect(snapshot.stateInformation).toHaveLength(17);
+    });
+
+    test("fabric-query2 runs successfully with saving snapshot up to block #6 w/o state information", async () => {
+        const resultJSON = path.join(artifactDir("peer0.org1.example.com"), "result.fabric-query.snapshot6.json");
+        const queryConfigJSON = path.join(artifactDir("peer0.org1.example.com"), "fabric-query-config.json");
+        const snapshotJSON = path.join(artifactDir("peer0.org1.example.com"), "snapshot.fabric-query.block6.json");
+
+        fs.writeFileSync(queryConfigJSON, JSON.stringify({
+            ...fabricQueryConfig,
+            peer: fabricQueryPeerConfigs[0]
+        }));
+
+        expect(() => {
+            execFileSync(cliPath(),
+                [
+                    "start",
+                    "-n", "fabric-query2",
+                    "-c", queryConfigJSON,
+                    "-o", resultJSON,
+                    "-s", snapshotJSON,
+                    "-e", "6",
+                    "-i"
+                ], execOptions);
+        }).not.toThrow();
+
+        const results = JSON.parse(fs.readFileSync(resultJSON).toString("utf-8"));
+        const allCount = countResults(results);
+
+        expect(allCount.total).toBeGreaterThan(0);
+        expect(allCount.failed).toBe(0);
+        // Should check only blocks #0 through #6
+        expect(results.blocks).toHaveLength(7);
+
+        const snapshot = JSON.parse(fs.readFileSync(snapshotJSON).toString("utf-8"));
+        expect(snapshot.lastBlock).toBe(6);
+        expect(snapshot).not.toHaveProperty("stateInformation");
+    });
+
+    test("fabric-query2 runs successfully by resuming from snapshot at block #6 w/o state information", async () => {
+        const resultJSON = path.join(artifactDir("peer0.org1.example.com"), "result.fabric-query.resume.wostate.json");
+        const queryConfigJSON = path.join(artifactDir("peer0.org1.example.com"), "fabric-query-config.json");
+        const snapshotJSON = path.join(artifactDir("peer0.org1.example.com"), "snapshot.fabric-query.block6.json");
+        const newSnapshotJSON = path.join(artifactDir("peer0.org1.example.com"), "snapshot.fabric-query.block7.wostate.json");
+
+        fs.writeFileSync(queryConfigJSON, JSON.stringify({
+            ...fabricQueryConfig,
+            peer: fabricQueryPeerConfigs[0]
+        }));
+
+        expect(() => {
+            execFileSync(cliPath(),
+                [
+                    "start",
+                    "-n", "fabric-query2",
+                    "-c", queryConfigJSON,
+                    "-o", resultJSON,
+                    "-r", snapshotJSON,
+                    "-s", newSnapshotJSON,
+                    "-i"
+                ], execOptions);
+        }).not.toThrow();
+
+        const results = JSON.parse(fs.readFileSync(resultJSON).toString("utf-8"));
+        const allCount = countResults(results);
+
+        expect(allCount.total).toBeGreaterThan(0);
+        expect(allCount.failed).toBe(0);
+        // Should check only block #7
+        expect(results.blocks).toHaveLength(1);
+
+        const snapshot = JSON.parse(fs.readFileSync(newSnapshotJSON).toString("utf-8"));
+        expect(snapshot.lastBlock).toBe(7);
+        expect(snapshot).not.toHaveProperty("stateInformation");
+    });
+
+    test("fabric-query2 w/o '-i' option fails by resuming from snapshot at block #6 w/o state information", async () => {
+        const resultJSON = path.join(artifactDir("peer0.org1.example.com"), "result.fabric-query.resume.wostate.json");
+        const queryConfigJSON = path.join(artifactDir("peer0.org1.example.com"), "fabric-query-config.json");
+        const snapshotJSON = path.join(artifactDir("peer0.org1.example.com"), "snapshot.fabric-query.block6.json");
+        const newSnapshotJSON = path.join(artifactDir("peer0.org1.example.com"), "snapshot.fabric-query.block7.wostate.json");
+
+        fs.writeFileSync(queryConfigJSON, JSON.stringify({
+            ...fabricQueryConfig,
+            peer: fabricQueryPeerConfigs[0]
+        }));
+
+        expect(() => {
+            execFileSync(cliPath(),
+                [
+                    "start",
+                    "-n", "fabric-query2",
+                    "-c", queryConfigJSON,
+                    "-o", resultJSON,
+                    "-r", snapshotJSON,
+                    "-s", newSnapshotJSON
+                ], execOptions);
+        }).toThrow();
     });
 });
