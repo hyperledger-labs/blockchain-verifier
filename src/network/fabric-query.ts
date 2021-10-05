@@ -9,7 +9,7 @@ import * as fs from "fs";
 import * as util from "util";
 import { BCVerifierError, Transaction } from "../common";
 import { FabricBlock, FabricTransaction } from "../data/fabric";
-import { FabricBCVSnapshot, FabricBCVSnapshotData } from "../data/fabric/fabric-bcv-snapshot";
+import { FabricBCVSnapshot, FabricBCVSnapshotContext, FabricBCVSnapshotData } from "../data/fabric/fabric-bcv-snapshot";
 import { FabricConfigCache } from "../data/fabric/fabric-utils";
 import { BlockSource, DataModelType, NetworkPlugin } from "../network-plugin";
 import { BlockProvider, KeyValueBlockProvider } from "../provider";
@@ -179,15 +179,20 @@ export default class FabricQueryPlugin implements NetworkPlugin {
         const lastBlock = fabricTransaction.getBlock();
         const configBlockIndex = lastBlock.getLastConfigBlockIndex();
         const configInfo = await FabricConfigCache.GetInstance().getConfig(configBlockIndex);
-        const state = await kvProvider.getKeyValueState(fabricTransaction);
 
-        const snapshot = new FabricBCVSnapshot("fabric-query", null, {
+        const context: FabricBCVSnapshotContext = {
             block: lastBlock,
             configInfo: configInfo,
             transaction: fabricTransaction,
-            state: state,
             timestamp: Date.now(),
-        });
+        };
+
+        if (kvProvider instanceof KeyValueBlockProvider) {
+            const state = await kvProvider.getKeyValueState(fabricTransaction);
+            context.state = state;
+        }
+
+        const snapshot = new FabricBCVSnapshot("fabric-query", null, context);
 
         return await snapshot.getSnapshot();
     }
@@ -195,6 +200,6 @@ export default class FabricQueryPlugin implements NetworkPlugin {
     public loadFromSnapshot(data: BCVSnapshotData): BCVSnapshot {
         const fabricSnapshotData = data as FabricBCVSnapshotData;
 
-        return new FabricBCVSnapshot("fabric-block", fabricSnapshotData);
+        return new FabricBCVSnapshot("fabric-query", fabricSnapshotData);
     }
 }

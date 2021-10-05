@@ -34,6 +34,7 @@ program.version("v0.4.0")
     .option("-s, --save-snapshot <snapshot>", "Save snapshot after checks")
     .option("-r, --resume-snapshot <snapshot>", "Resume checks from snapshot")
     .option("-e, --end-block <end block>", "Stop the checks at the specified block (inclusive)")
+    .option("-i, --skip-key-value", "Skip key value processing even if snapshot is specified")
     .arguments("<command>")
     .action((command) => {
         cliCommand = command;
@@ -91,7 +92,8 @@ async function start(): Promise<number> {
         checkersToExclude: checkersToExclude,
         saveSnapshot: saveSnapshot,
         snapshotToResume: resumeData,
-        endBlock: opts.endBlock
+        endBlock: opts.endBlock,
+        skipKeyValue: opts.skipKeyValue
     });
 
     const { resultSet, snapshotData } = await bcv.verify();
