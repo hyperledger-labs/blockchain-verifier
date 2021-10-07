@@ -69,7 +69,7 @@ export class BlockProvider {
             if (this.transactions[transactionId] != null) {
                 return this.transactions[transactionId];
             } else {
-                throw new BCVerifierError("transaction is not found in a block where it should be in."
+                throw new BCVerifierError("transaction is not found in a block where it should be in. "
                                           + "A possible bug in the block plugin.");
             }
         } catch (e) {
