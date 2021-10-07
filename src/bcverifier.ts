@@ -9,7 +9,7 @@ import { BCVerifierError, BCVerifierNotImplemented, KeyValueTransaction, Transac
 import { DataModelType, NetworkPlugin } from "./network-plugin";
 import { BlockProvider, KeyValueBlockProvider, KeyValueProviderOptions } from "./provider";
 import { ResultSet } from "./result-set";
-import { BCVSnapshot } from "./snapshot";
+import { BCVCheckpoint } from "./checkpoint";
 
 import FabricBlock from "./network/fabric-block";
 import FabricQuery from "./network/fabric-query";
@@ -21,8 +21,8 @@ import FabricTransactionChecker from "./check/fabric-transaction-check";
 import MultipleLedgerChecker from "./check/multiple-ledgers";
 
 type NetworkPluginInfo = { pluginName: string, module: new (configString: string) => NetworkPlugin };
-type BlockCheckPluginInfo =  { pluginName: string, module: new (provider: BlockProvider, resultSet: ResultSet, snapshot?: BCVSnapshot) => BlockCheckPlugin };
-type TransactionCheckPluginInfo = { pluginName: string, module: new (provider: BlockProvider, resultSet: ResultSet, snapshot?: BCVSnapshot) => TransactionCheckPlugin };
+type BlockCheckPluginInfo =  { pluginName: string, module: new (provider: BlockProvider, resultSet: ResultSet, checkpoint?: BCVCheckpoint) => BlockCheckPlugin };
+type TransactionCheckPluginInfo = { pluginName: string, module: new (provider: BlockProvider, resultSet: ResultSet, checkpoint?: BCVCheckpoint) => TransactionCheckPlugin };
 type MultipleLedgerCheckPluginInfo =  { pluginName: string, module: new (provider: BlockProvider, others: BlockProvider[], resultSet: ResultSet) => BlockCheckPlugin };
 
 const networkPlugins: NetworkPluginInfo[] = [
@@ -76,23 +76,23 @@ export class BCVerifier {
 
         // Key-value processing can be skipped only if
         //   1) No application checker is specified AND
-        //   2a) Snapshot is not to be saved OR 2b) --skip-key-value option is specified
-        const skipKV = this.config.applicationCheckers.length === 0 && (this.config.saveSnapshot !== true || this.config.skipKeyValue === true);
-        let snapshot: BCVSnapshot | undefined = undefined;
+        //   2a) Checkpoint is not to be saved OR 2b) --skip-key-value option is specified
+        const skipKV = this.config.applicationCheckers.length === 0 && (this.config.saveCheckpoint !== true || this.config.skipKeyValue === true);
+        let checkpoint: BCVCheckpoint | undefined = undefined;
         let firstBlock = 0;
-        if (this.config.snapshotToResume != null) {
-            snapshot = this.network.loadFromSnapshot(this.config.snapshotToResume);
-            firstBlock = snapshot.getLastBlock() + 1;
+        if (this.config.checkpointToResume != null) {
+            checkpoint = this.network.loadFromCheckpoint(this.config.checkpointToResume);
+            firstBlock = checkpoint.getLastBlock() + 1;
         }
 
         const blockSource = await this.network.getPreferredBlockSource();
         let blockProvider: BlockProvider;
         if (this.network.getDataModelType() === DataModelType.KeyValue && !skipKV) {
             const opts: KeyValueProviderOptions = {};
-            if (snapshot != null) {
-                opts.initialState = await snapshot.getInitialKVState();
+            if (checkpoint != null) {
+                opts.initialState = await checkpoint.getInitialKVState();
                 if (opts.initialState == null) {
-                    throw new BCVerifierError("Snapshot does not contain key-value information");
+                    throw new BCVerifierError("Checkpoint does not contain key-value information");
                 }
             }
 
@@ -117,13 +117,13 @@ export class BCVerifier {
         const blockCheckPlugins: BlockCheckPlugin[] = [];
         for (const info of blockVerifiers) {
             if (!this.config.checkersToExclude.includes(info.pluginName)) {
-                blockCheckPlugins.push(new info.module(blockProvider, this.resultSet, snapshot));
+                blockCheckPlugins.push(new info.module(blockProvider, this.resultSet, checkpoint));
             }
         }
         const txCheckPlugins: TransactionCheckPlugin[] = [];
         for (const info of txVerifiers) {
             if (!this.config.checkersToExclude.includes(info.pluginName)) {
-                txCheckPlugins.push(new info.module(blockProvider, this.resultSet, snapshot));
+                txCheckPlugins.push(new info.module(blockProvider, this.resultSet, checkpoint));
             }
         }
 
@@ -216,8 +216,8 @@ export class BCVerifier {
             resultSet: this.resultSet
         };
 
-        if (this.config.saveSnapshot === true && lastTx != null) {
-            result.snapshotData = await this.network.createSnapshot(blockProvider, lastTx);
+        if (this.config.saveCheckpoint === true && lastTx != null) {
+            result.checkpointData = await this.network.createCheckpoint(blockProvider, lastTx);
         }
 
         return result;

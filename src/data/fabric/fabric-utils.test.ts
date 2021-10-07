@@ -7,7 +7,7 @@
 import { FabricBlock, FabricConfigCache, FabricConfigTransactionInfo, FabricTransaction, MSPConfig } from ".";
 import { BCVerifierNotFound } from "../../common";
 import { BlockProvider } from "../../provider";
-import { FabricBCVSnapshot } from "./fabric-bcv-snapshot";
+import { FabricBCVCheckpoint } from "./fabric-bcv-checkpoint";
 import * as utils from "./fabric-utils";
 
 const configTx: FabricTransaction = {
@@ -111,7 +111,7 @@ describe("FabricConfigCache", () => {
         getBlock: jest.fn().mockResolvedValue(mockConfigBlock)
     } as any;
 
-    const mockSnapshot: FabricBCVSnapshot = {
+    const mockCheckpoint: FabricBCVCheckpoint = {
         getLastConfigBlockInfo: jest.fn().mockReturnValue({
             blockNumber: 10
         })
@@ -122,7 +122,7 @@ describe("FabricConfigCache", () => {
     });
 
     test("Init() returns an instance", () => {
-        const cache = utils.FabricConfigCache.Init(mockProvider, mockSnapshot);
+        const cache = utils.FabricConfigCache.Init(mockProvider, mockCheckpoint);
 
         expect(cache).toBeInstanceOf(FabricConfigCache);
     });
@@ -134,8 +134,8 @@ describe("FabricConfigCache", () => {
     });
 
     test("Two Init()'s return the same instance", () => {
-        const cache1 = utils.FabricConfigCache.Init(mockProvider, mockSnapshot);
-        const cache2 = utils.FabricConfigCache.Init(mockProvider, mockSnapshot);
+        const cache1 = utils.FabricConfigCache.Init(mockProvider, mockCheckpoint);
+        const cache2 = utils.FabricConfigCache.Init(mockProvider, mockCheckpoint);
 
         expect(cache1).toBe(cache2);
     });

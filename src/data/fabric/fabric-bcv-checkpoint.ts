@@ -1,51 +1,51 @@
 import { deserializeConfigTxInfo, serializeConfigTxInfo } from ".";
 import { BCVerifierError, HashValueType } from "../../common";
 import { KeyValueManagerInitialState } from "../../kvmanager";
-import { BCVSnapshot, BCVSnapshotContext, BCVSnapshotData } from "../../snapshot";
+import { BCVCheckpoint, BCVCheckpointContext, BCVCheckpointData } from "../../checkpoint";
 import { FabricBlock, FabricConfigTransactionInfo, FabricTransaction } from "./fabric-data";
 
-export interface FabricBCVSnapshotBlockInformation {
+export interface FabricBCVCheckpointBlockInformation {
     hashForSelf: string;
     hashForPrev: string;
     lastConfigBlock: any;
 }
-export interface FabricBCVSnapshotKV {
+export interface FabricBCVCheckpointKV {
     key: string;
     value: string;
     version: string;
 }
-export type FabricBCVSnapshotStateInformation = FabricBCVSnapshotKV[];
+export type FabricBCVCheckpointStateInformation = FabricBCVCheckpointKV[];
 
-export interface FabricBCVSnapshotContext extends BCVSnapshotContext {
+export interface FabricBCVCheckpointContext extends BCVCheckpointContext {
     block: FabricBlock;
     transaction: FabricTransaction;
     configInfo: FabricConfigTransactionInfo;
 }
 
-export interface FabricBCVSnapshotData extends BCVSnapshotData {
-    blockInformation: FabricBCVSnapshotBlockInformation;
-    stateInformation?: FabricBCVSnapshotStateInformation;
+export interface FabricBCVCheckpointData extends BCVCheckpointData {
+    blockInformation: FabricBCVCheckpointBlockInformation;
+    stateInformation?: FabricBCVCheckpointStateInformation;
 }
 
-export class FabricBCVSnapshot extends BCVSnapshot {
-    protected context: FabricBCVSnapshotContext | null;
+export class FabricBCVCheckpoint extends BCVCheckpoint {
+    protected context: FabricBCVCheckpointContext | null;
 
-    public constructor(pluginName: string, snapshotData: FabricBCVSnapshotData | null, context?: FabricBCVSnapshotContext) {
-        super(pluginName, "fabric", snapshotData, context);
+    public constructor(pluginName: string, checkpointData: FabricBCVCheckpointData | null, context?: FabricBCVCheckpointContext) {
+        super(pluginName, "fabric", checkpointData, context);
 
-        if (snapshotData == null && context != null) {
+        if (checkpointData == null && context != null) {
             this.context = context;
         } else {
             this.context = null;
         }
     }
 
-    public async getSnapshot(): Promise<FabricBCVSnapshotData> {
+    public async getCheckpoint(): Promise<FabricBCVCheckpointData> {
         if (this.context == null) {
-            throw new BCVerifierError("No context is set. Snapshot cannot be generated");
+            throw new BCVerifierError("No context is set. Checkpoint cannot be generated");
         }
 
-        const data: FabricBCVSnapshotData = {
+        const data: FabricBCVCheckpointData = {
             ...this.data,
             blockInformation: {
                 hashForSelf: this.context.block.calcHashValue(HashValueType.HASH_FOR_SELF).toString("hex"),
@@ -67,7 +67,7 @@ export class FabricBCVSnapshot extends BCVSnapshot {
     }
 
     public async getInitialKVState(): Promise<KeyValueManagerInitialState | undefined> {
-        const state: FabricBCVSnapshotStateInformation = this.data.stateInformation;
+        const state: FabricBCVCheckpointStateInformation = this.data.stateInformation;
         if (state == null) {
             return undefined;
         }
@@ -84,9 +84,9 @@ export class FabricBCVSnapshot extends BCVSnapshot {
     }
 
     public getLastConfigBlockInfo(): FabricConfigTransactionInfo {
-        const info: FabricBCVSnapshotBlockInformation = this.data.blockInformation;
+        const info: FabricBCVCheckpointBlockInformation = this.data.blockInformation;
         if (info == null) {
-            throw new Error("Snapshot does not contain valid block information");
+            throw new Error("Checkpoint does not contain valid block information");
         }
         return deserializeConfigTxInfo(info.lastConfigBlock);
     }

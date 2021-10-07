@@ -1,7 +1,7 @@
 import { HashValueType } from "../../common";
-import { FabricBCVSnapshot, FabricBCVSnapshotContext } from "./fabric-bcv-snapshot";
+import { FabricBCVCheckpoint, FabricBCVCheckpointContext } from "./fabric-bcv-checkpoint";
 
-describe("FabricBCVSnapshot", () => {
+describe("FabricBCVCheckpoint", () => {
     const mockLastBlock = {
         calcHashValue: (type: HashValueType) => {
             if (type === HashValueType.HASH_FOR_PREV) {
@@ -30,7 +30,7 @@ describe("FabricBCVSnapshot", () => {
         }]
     };
     const now = Date.now();
-    const context: FabricBCVSnapshotContext = {
+    const context: FabricBCVCheckpointContext = {
         block: mockLastBlock as any,
         transaction: mockLastTransaction as any,
         configInfo: mockLastConfigInfo,
@@ -39,24 +39,24 @@ describe("FabricBCVSnapshot", () => {
     };
 
     test("constructor is initialized successfully with context", () => {
-        new FabricBCVSnapshot("test", null, context);
+        new FabricBCVCheckpoint("test", null, context);
     });
 
     test("constructor throws when neither data nor context is passed", () => {
         expect(() => {
-            new FabricBCVSnapshot("test", null);
+            new FabricBCVCheckpoint("test", null);
         }).toThrowError();
     });
 
-    test("getSnapshot with context returns a valid snapshot data", async () => {
-        const snapshot = new FabricBCVSnapshot("test", null, context);
-        const data = await snapshot.getSnapshot();
+    test("getCheckpoint with context returns a valid checkpoint data", async () => {
+        const checkpoint = new FabricBCVCheckpoint("test", null, context);
+        const data = await checkpoint.getCheckpoint();
 
         expect(data.lastBlock).toBe(42);
         expect(data.lastTransaction).toBe("tx-id-for-last");
         expect(data.timestamp).toBe(now);
         expect(data.networkPlugin).toBe("test");
-        expect(data.snapshotDataType).toBe("fabric");
+        expect(data.checkpointDataType).toBe("fabric");
         expect(Buffer.from(data.blockInformation.hashForPrev, "hex").toString("utf-8")).toBe("test-hash-for-prev");
         expect(Buffer.from(data.blockInformation.hashForSelf, "hex").toString("utf-8")).toBe("test-hash-for-self");
         expect(data.blockInformation.lastConfigBlock.blockNumber).toBe(24);

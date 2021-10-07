@@ -7,11 +7,11 @@
 import { format } from "util";
 
 import { TransactionCheckPlugin } from ".";
-import { BCVSnapshot } from "..";
+import { BCVCheckpoint } from "..";
 import { ResultPredicate } from "../common";
 import { FabricAction, FabricConfigTransactionInfo, FabricMetaDataIndex, FabricPrivateRWSet,
          FabricTransaction, verifyIdentityMSP, verifySignature, verifySignatureHeader } from "../data/fabric";
-import { FabricBCVSnapshot } from "../data/fabric/fabric-bcv-snapshot";
+import { FabricBCVCheckpoint } from "../data/fabric/fabric-bcv-checkpoint";
 import { FabricConfigCache } from "../data/fabric/fabric-utils";
 import { BlockProvider } from "../provider";
 import { ResultSet, TransactionResultPusher } from "../result-set";
@@ -22,13 +22,13 @@ export default class FabricTransactionIntegrityChecker implements TransactionChe
     private config: FabricConfigCache;
     private results: TransactionResultPusher;
 
-    constructor(provider: BlockProvider, resultSet: ResultSet, snapshot?: BCVSnapshot) {
+    constructor(provider: BlockProvider, resultSet: ResultSet, checkpoint?: BCVCheckpoint) {
         this.provider = provider;
         this.results = new TransactionResultPusher(this.checkerName, resultSet);
 
-        if (snapshot != null) {
-            const fabricSnapshot = snapshot as FabricBCVSnapshot;
-            this.config = FabricConfigCache.Init(provider, fabricSnapshot);
+        if (checkpoint != null) {
+            const fabricCheckpoint = checkpoint as FabricBCVCheckpoint;
+            this.config = FabricConfigCache.Init(provider, fabricCheckpoint);
         } else {
             this.config = FabricConfigCache.Init(provider);
         }

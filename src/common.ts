@@ -5,7 +5,7 @@
  */
 
 import { ResultSet } from "./result-set";
-import { BCVSnapshotData } from "./snapshot";
+import { BCVCheckpointData } from "./checkpoint";
 
 export interface VerificationConfig {
     networkType: string;
@@ -14,16 +14,16 @@ export interface VerificationConfig {
     applicationCheckers: string[];
     checkersToExclude: string[];
 
-    saveSnapshot: boolean;
+    saveCheckpoint: boolean;
     skipKeyValue: boolean;
-    snapshotToResume?: BCVSnapshotData;
+    checkpointToResume?: BCVCheckpointData;
 
     endBlock?: number;
 }
 
 export interface VerificationResult {
     resultSet: ResultSet;
-    snapshotData?: BCVSnapshotData;
+    checkpointData?: BCVCheckpointData;
 }
 
 export enum ResultCode {
