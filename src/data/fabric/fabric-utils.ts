@@ -9,7 +9,7 @@ import { common, msp } from "fabric-protos";
 import { verifySigningChain } from "pem";
 import { BCVerifierError, BCVerifierNotFound } from "../../common";
 import { BlockProvider } from "../../provider";
-import { FabricBCVSnapshot } from "./fabric-bcv-snapshot";
+import { FabricBCVCheckpoint } from "./fabric-bcv-checkpoint";
 import { FabricBlock, FabricConfigTransactionInfo, FabricTransaction } from "./fabric-data";
 import { FabricOUIdentifier, MSPConfig, SigningIdentityInfo } from "./fabric-types";
 
@@ -107,9 +107,9 @@ export class FabricConfigCache {
     private configMap: { [configBlockNumber: number]: FabricConfigTransactionInfo };
     private provider: BlockProvider;
 
-    public static Init(provider: BlockProvider, snapshot?: FabricBCVSnapshot) {
+    public static Init(provider: BlockProvider, checkpoint?: FabricBCVCheckpoint) {
         if (FabricConfigCache.instance == null) {
-            FabricConfigCache.instance = new FabricConfigCache(provider, snapshot);
+            FabricConfigCache.instance = new FabricConfigCache(provider, checkpoint);
         }
         return FabricConfigCache.instance;
     }
@@ -121,12 +121,12 @@ export class FabricConfigCache {
         return FabricConfigCache.instance;
     }
 
-    protected constructor(provider: BlockProvider, snapshot?: FabricBCVSnapshot) {
+    protected constructor(provider: BlockProvider, checkpoint?: FabricBCVCheckpoint) {
         this.configMap = {};
         this.provider = provider;
 
-        if (snapshot != null) {
-            const info = snapshot.getLastConfigBlockInfo();
+        if (checkpoint != null) {
+            const info = checkpoint.getLastConfigBlockInfo();
             this.configMap[info.blockNumber] = info;
         }
     }

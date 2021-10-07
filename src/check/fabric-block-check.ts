@@ -7,10 +7,10 @@
  */
 import { common } from "fabric-protos";
 import { BlockCheckPlugin } from ".";
-import { BCVSnapshot } from "..";
+import { BCVCheckpoint } from "..";
 import { ResultPredicate } from "../common";
 import { FabricBlock, FabricConfigTransactionInfo, FabricMetaDataIndex, verifyMetadataSignature, verifySignatureHeader } from "../data/fabric";
-import { FabricBCVSnapshot } from "../data/fabric/fabric-bcv-snapshot";
+import { FabricBCVCheckpoint } from "../data/fabric/fabric-bcv-checkpoint";
 import { FabricConfigCache } from "../data/fabric/fabric-utils";
 import { BlockProvider } from "../provider";
 import { BlockResultPusher, ResultSet } from "../result-set";
@@ -21,13 +21,13 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
     private config: FabricConfigCache;
     private results: BlockResultPusher;
 
-    constructor(provider: BlockProvider, resultSet: ResultSet, snapshot?: BCVSnapshot) {
+    constructor(provider: BlockProvider, resultSet: ResultSet, checkpoint?: BCVCheckpoint) {
         this.provider = provider;
         this.results = new BlockResultPusher(this.checkerName, resultSet);
 
-        if (snapshot != null) {
-            const fabricSnapshot = snapshot as FabricBCVSnapshot;
-            this.config = FabricConfigCache.Init(provider, fabricSnapshot);
+        if (checkpoint != null) {
+            const fabricCheckpoint = checkpoint as FabricBCVCheckpoint;
+            this.config = FabricConfigCache.Init(provider, fabricCheckpoint);
         } else {
             this.config = FabricConfigCache.Init(provider);
         }

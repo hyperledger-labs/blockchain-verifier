@@ -7,9 +7,9 @@
 import { BCVerifierError, Block, KeyValueState, Transaction } from "./common";
 import { KeyValueManagerInitialState } from "./kvmanager";
 
-export interface BCVSnapshotData {
+export interface BCVCheckpointData {
     networkPlugin: string;
-    snapshotDataType: string;
+    checkpointDataType: string;
 
     lastBlock: number;
     lastTransaction: string;
@@ -22,26 +22,26 @@ export interface BCVSnapshotData {
     additionalInformation?: any;
 }
 
-export interface BCVSnapshotContext {
+export interface BCVCheckpointContext {
     block: Block;
     transaction: Transaction;
     timestamp: number | null;
     state?: KeyValueState;
 }
 
-export abstract class BCVSnapshot {
-    protected data: BCVSnapshotData;
+export abstract class BCVCheckpoint {
+    protected data: BCVCheckpointData;
 
-    public constructor(pluginName: string, dataType: string, snapshot: BCVSnapshotData | null, context?: BCVSnapshotContext) {
-        if (snapshot != null) {
-            if (dataType !== snapshot.snapshotDataType) {
+    public constructor(pluginName: string, dataType: string, Checkpoint: BCVCheckpointData | null, context?: BCVCheckpointContext) {
+        if (Checkpoint != null) {
+            if (dataType !== Checkpoint.checkpointDataType) {
                 throw new BCVerifierError("Datatype does not match");
             }
-            this.data = snapshot;
+            this.data = Checkpoint;
         } else if (context != null) {
             this.data = {
                 networkPlugin: pluginName,
-                snapshotDataType: dataType,
+                checkpointDataType: dataType,
 
                 lastBlock: context.block.getBlockNumber(),
                 lastTransaction: context.transaction.getTransactionID(),
@@ -49,7 +49,7 @@ export abstract class BCVSnapshot {
                 timestamp: context.timestamp == null ? Date.now() : context.timestamp,
             };
         } else {
-            throw new BCVerifierError("Neither context nor snapshot is supplied");
+            throw new BCVerifierError("Neither context nor Checkpoint is supplied");
         }
     }
 
@@ -59,9 +59,9 @@ export abstract class BCVSnapshot {
 
     public abstract getInitialKVState(): Promise<KeyValueManagerInitialState | undefined>;
 
-    public abstract getSnapshot(): Promise<BCVSnapshotData>;
+    public abstract getCheckpoint(): Promise<BCVCheckpointData>;
 
-    public getSnapshotJSON(): Promise<string> {
-        return this.getSnapshot().then((snapshot) => JSON.stringify(snapshot));
+    public getCheckpointJSON(): Promise<string> {
+        return this.getCheckpoint().then((Checkpoint) => JSON.stringify(Checkpoint));
     }
 }

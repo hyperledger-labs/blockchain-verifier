@@ -31,10 +31,10 @@ program.version("v0.4.0")
     .option("-o, --output <result file>", "Result file")
     .option("-k, --checkers <checkers>", "Checker module list", list)
     .option("-x, --exclude-checkers <checkers>", "Name of checkers to exclude", list)
-    .option("-s, --save-snapshot <snapshot>", "Save snapshot after checks")
-    .option("-r, --resume-snapshot <snapshot>", "Resume checks from snapshot")
+    .option("-s, --save-checkpoint <checkpoint>", "Save checkpoint after checks")
+    .option("-r, --resume-checkpoint <checkpoint>", "Resume checks from checkpoint")
     .option("-e, --end-block <end block>", "Stop the checks at the specified block (inclusive)")
-    .option("-i, --skip-key-value", "Skip key value processing even if snapshot is specified")
+    .option("-i, --skip-key-value", "Skip key value processing even if checkpoint is specified")
     .arguments("<command>")
     .action((command) => {
         cliCommand = command;
@@ -79,10 +79,10 @@ async function start(): Promise<number> {
     if (opts.excludeCheckers != null) {
         checkersToExclude = opts.excludeCheckers;
     }
-    const saveSnapshot = opts.saveSnapshot == null ? false : true;
+    const saveCheckpoint = opts.saveCheckpoint == null ? false : true;
     let resumeData;
-    if (opts.resumeSnapshot != null) {
-        resumeData = JSON.parse(readFileSync(opts.resumeSnapshot).toString("utf-8"));
+    if (opts.resumeCheckpoint != null) {
+        resumeData = JSON.parse(readFileSync(opts.resumeCheckpoint).toString("utf-8"));
     }
 
     const bcv = new BCVerifier({
@@ -90,19 +90,19 @@ async function start(): Promise<number> {
         networkConfig: opts.networkConfig,
         applicationCheckers: applicationCheckers,
         checkersToExclude: checkersToExclude,
-        saveSnapshot: saveSnapshot,
-        snapshotToResume: resumeData,
+        saveCheckpoint: saveCheckpoint,
+        checkpointToResume: resumeData,
         endBlock: opts.endBlock,
         skipKeyValue: opts.skipKeyValue
     });
 
-    const { resultSet, snapshotData } = await bcv.verify();
+    const { resultSet, checkpointData } = await bcv.verify();
 
-    if (saveSnapshot) {
-        if (snapshotData == null) {
-            console.warn("Snapshot is not generated. Skipping saving the snapshot...");
+    if (saveCheckpoint) {
+        if (checkpointData == null) {
+            console.warn("Checkpoint is not generated. Skipping saving the checkpoint...");
         } else {
-            writeFileSync(opts.saveSnapshot, JSON.stringify(snapshotData));
+            writeFileSync(opts.saveCheckpoint, JSON.stringify(checkpointData));
         }
     }
 

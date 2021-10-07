@@ -6,7 +6,7 @@
 
 import { Block, Transaction } from "./common";
 import { BlockProvider } from "./provider";
-import { BCVSnapshot, BCVSnapshotData } from "./snapshot";
+import { BCVCheckpoint, BCVCheckpointData } from "./checkpoint";
 
 export interface BlockSource {
     getSourceID(): string;
@@ -30,6 +30,6 @@ export interface NetworkPlugin {
     getBlockSources(): Promise<BlockSource[]>;
     getPreferredBlockSource(): Promise<BlockSource>;
     getDataModelType(): DataModelType;
-    createSnapshot(provider: BlockProvider, transaction: Transaction): Promise<BCVSnapshotData>;
-    loadFromSnapshot(data: BCVSnapshotData): BCVSnapshot;
+    createCheckpoint(provider: BlockProvider, transaction: Transaction): Promise<BCVCheckpointData>;
+    loadFromCheckpoint(data: BCVCheckpointData): BCVCheckpoint;
 }

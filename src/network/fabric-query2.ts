@@ -10,11 +10,11 @@ import util from "util";
 
 import { BCVerifierError, Transaction } from "../common";
 import { FabricBlock, FabricTransaction } from "../data/fabric";
-import { FabricBCVSnapshot, FabricBCVSnapshotContext, FabricBCVSnapshotData } from "../data/fabric/fabric-bcv-snapshot";
+import { FabricBCVCheckpoint, FabricBCVCheckpointContext, FabricBCVCheckpointData } from "../data/fabric/fabric-bcv-checkpoint";
 import { FabricConfigCache } from "../data/fabric/fabric-utils";
 import { BlockSource, DataModelType, NetworkPlugin } from "../network-plugin";
 import { BlockProvider, KeyValueBlockProvider } from "../provider";
-import { BCVSnapshot, BCVSnapshotData } from "../snapshot";
+import { BCVCheckpoint, BCVCheckpointData } from "../checkpoint";
 
 const QUERY_SYSTEM_CHAINCODE = "qscc";
 const FUNC_GET_BLOCK = "GetBlockByNumber";
@@ -208,7 +208,7 @@ export default class FabricQuery2Plugin implements NetworkPlugin {
         }
     }
 
-    public async createSnapshot(provider: BlockProvider, transaction: Transaction): Promise<BCVSnapshotData> {
+    public async createCheckpoint(provider: BlockProvider, transaction: Transaction): Promise<BCVCheckpointData> {
         const kvProvider = provider as KeyValueBlockProvider;
         const fabricTransaction = transaction as FabricTransaction;
 
@@ -216,7 +216,7 @@ export default class FabricQuery2Plugin implements NetworkPlugin {
         const configBlockIndex = lastBlock.getLastConfigBlockIndex();
         const configInfo = await FabricConfigCache.GetInstance().getConfig(configBlockIndex);
 
-        const context: FabricBCVSnapshotContext = {
+        const context: FabricBCVCheckpointContext = {
             block: lastBlock,
             configInfo: configInfo,
             transaction: fabricTransaction,
@@ -228,14 +228,14 @@ export default class FabricQuery2Plugin implements NetworkPlugin {
             context.state = state;
         }
 
-        const snapshot = new FabricBCVSnapshot("fabric-query2", null, context);
+        const checkpoint = new FabricBCVCheckpoint("fabric-query2", null, context);
 
-        return await snapshot.getSnapshot();
+        return await checkpoint.getCheckpoint();
     }
 
-    public loadFromSnapshot(data: BCVSnapshotData): BCVSnapshot {
-        const fabricSnapshotData = data as FabricBCVSnapshotData;
+    public loadFromCheckpoint(data: BCVCheckpointData): BCVCheckpoint {
+        const fabricCheckpointData = data as FabricBCVCheckpointData;
 
-        return new FabricBCVSnapshot("fabric-query2", fabricSnapshotData);
+        return new FabricBCVCheckpoint("fabric-query2", fabricCheckpointData);
     }
 }

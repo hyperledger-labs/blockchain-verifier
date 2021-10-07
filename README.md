@@ -36,9 +36,9 @@ Run with `-h` for the full list of the options.
 | `-o (file)`     | Save the result JSON in the specified file                                                         |
 | `-k (checkers)` | Specify the modules to use as application-specific checkers                                        |
 | `-x (checkers)` | Disable the checkers with specified names                                                          |
-| `-s (snapshot)` | Save the snapshot into a JSON file after the checks are completed                                  |
-| `-r (snapshot)` | Resume checks from the snapshot                                                                    |
-| `-i`            | Skip key-value processing even if a snapshot is to be saved (i.e. the `-s` option is specified)    |
+| `-s (checkpoint)` | Save the checkpoint into a JSON file after the checks are completed                                  |
+| `-r (checkpoint)` | Resume checks from the checkpoint                                                                    |
+| `-i`            | Skip key-value processing even if a checkpoint is to be saved (i.e. the `-s` option is specified)    |
 | `-e (block)`    | Stop checks at the specified block number                                                          |
 
 ### Commands
@@ -269,24 +269,24 @@ The check program should export a class that implements `AppStateCheckLogic` and
 
 For detail, please refer to [the application checker reference](docs/application-checker.md).
 
-## Snapshots
+## Checkpoints
 
-v0.4.0 introduces a snapshot feature for Blockchain Verifier. A snapshot is a file which contains what are required 
+v0.4.0 introduces a checkpoint feature for Blockchain Verifier. A checkpoint is a file which contains what are required 
 for Blockchain Verifier to resume checks from the last block in the future, such as block hashes, state database etc.
 
-A snapshot is saved when the `-s` option is specified. When a snapshot is specified with the `-r` option, Blockchain
-Verifier resumes checks from the next block of the last block saved in the snapshot.
-A user may save a snapshot after executing Blockchain Verifier for the ledger with 100 blocks; they can continue checks
-using the snapshot from the 101st block, skipping the first 100 blocks as they are considered "verified" with the snapshot.
+A checkpoint is saved when the `-s` option is specified. When a checkpoint is specified with the `-r` option, Blockchain
+Verifier resumes checks from the next block of the last block saved in the checkpoint.
+A user may save a checkpoint after executing Blockchain Verifier for the ledger with 100 blocks; they can continue checks
+using the checkpoint from the 101st block, skipping the first 100 blocks as they are considered "verified" with the checkpoint.
 
 ### Caveat (for key-value ledgers)
 
 Starting v0.3.1, Blockchain Verifier does not process the key-value pairs in transaction unless any application checker is
-specified. When it is directed to save a snapshot, it DOES process key-value pairs and save the state information into the
-snapshot because the information might be needed in future execution. If you really want to suppress the key-value processing,
+specified. When it is directed to save a checkpoint, it DOES process key-value pairs and save the state information into the
+checkpoint because the information might be needed in future execution. If you really want to suppress the key-value processing,
 use the `--skip-key-value` (`-i`) option along with the `-s` option.
 
-Please also notice that application checkers will not be able to obtain history for key-value pairs before the snapshot.
+Please also notice that application checkers will not be able to obtain history for key-value pairs before the checkpoint.
 
 ## TODO
 
@@ -298,7 +298,7 @@ Please also notice that application checkers will not be able to obtain history 
 
 ### v0.4.0 (to be released)
 
-- Add the snapshot feature
+- Add the checkpoint feature
 
 ### v0.3.1 (Aug. 31, 2021)
 
