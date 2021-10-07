@@ -54,7 +54,7 @@ function getConfig(config: string): FabricBlockConfigSet {
     }
 }
 
-function readVarInt(file: number, position: number | null): [number, number] {
+function readVarInt(file: number, position: number): [number, number] {
     let ret = 0;
     let value = 0;
     const buf = Buffer.alloc(1);
@@ -76,9 +76,7 @@ function readVarInt(file: number, position: number | null): [number, number] {
             return [ret, numByte];
         }
 
-        if (position != null) {
-            position++;
-        }
+        position++;
     }
 }
 
