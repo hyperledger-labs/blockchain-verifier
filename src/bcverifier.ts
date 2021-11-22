@@ -111,6 +111,11 @@ export class BCVerifier {
                 lastBlock = this.config.endBlock;
             }
         }
+        if (this.config.checkBlockCount != null && this.config.checkBlockCount > 0) {
+            if (lastBlock - firstBlock + 1 >= this.config.checkBlockCount) {
+                lastBlock = firstBlock + this.config.checkBlockCount - 1;
+            }
+        }
 
         await blockProvider.cacheBlockRange(firstBlock, lastBlock);
 

@@ -394,6 +394,78 @@ describe.each<TestConfig>([
         expect(checkpoint.stateInformation).toHaveLength(17);
     });
 
+    test("fabric-query2 checks one block successfully by resuming from checkpoint at block #5 with '-b 1' option", async () => {
+        const resultJSON = path.join(artifactDir("peer0.org1.example.com"), "result.fabric-query.resume.json");
+        const queryConfigJSON = path.join(artifactDir("peer0.org1.example.com"), "fabric-query-config.json");
+        const checkpointJSON = path.join(artifactDir("peer0.org1.example.com"), "checkpoint.fabric-query.block5.json");
+        const newCheckpointJSON = path.join(artifactDir("peer0.org1.example.com"), "checkpoint.fabric-query.block6.json");
+
+        fs.writeFileSync(queryConfigJSON, JSON.stringify({
+            ...fabricQueryConfig,
+            peer: fabricQueryPeerConfigs[0]
+        }));
+
+        expect(() => {
+            execFileSync(cliPath(),
+                [
+                    "start",
+                    "-n", "fabric-query2",
+                    "-c", queryConfigJSON,
+                    "-o", resultJSON,
+                    "-r", checkpointJSON,
+                    "-s", newCheckpointJSON,
+                    "-b", "1"
+                ], execOptions);
+        }).not.toThrow();
+
+        const results = JSON.parse(fs.readFileSync(resultJSON).toString("utf-8"));
+        const allCount = countResults(results);
+
+        expect(allCount.total).toBeGreaterThan(0);
+        expect(allCount.failed).toBe(0);
+        // Should check only the block #6
+        expect(results.blocks).toHaveLength(1);
+
+        const checkpoint = JSON.parse(fs.readFileSync(newCheckpointJSON).toString("utf-8"));
+        expect(checkpoint.lastBlock).toBe(6);
+    });
+
+    test("fabric-query2 checks up to block #7 by resuming from checkpoint at block #5 with '-b 999' option", async () => {
+        const resultJSON = path.join(artifactDir("peer0.org1.example.com"), "result.fabric-query.resume.json");
+        const queryConfigJSON = path.join(artifactDir("peer0.org1.example.com"), "fabric-query-config.json");
+        const checkpointJSON = path.join(artifactDir("peer0.org1.example.com"), "checkpoint.fabric-query.block5.json");
+        const newCheckpointJSON = path.join(artifactDir("peer0.org1.example.com"), "checkpoint.fabric-query.block6.json");
+
+        fs.writeFileSync(queryConfigJSON, JSON.stringify({
+            ...fabricQueryConfig,
+            peer: fabricQueryPeerConfigs[0]
+        }));
+
+        expect(() => {
+            execFileSync(cliPath(),
+                [
+                    "start",
+                    "-n", "fabric-query2",
+                    "-c", queryConfigJSON,
+                    "-o", resultJSON,
+                    "-r", checkpointJSON,
+                    "-s", newCheckpointJSON,
+                    "-b", "999"
+                ], execOptions);
+        }).not.toThrow();
+
+        const results = JSON.parse(fs.readFileSync(resultJSON).toString("utf-8"));
+        const allCount = countResults(results);
+
+        expect(allCount.total).toBeGreaterThan(0);
+        expect(allCount.failed).toBe(0);
+        // Should check only the block #6 and 7
+        expect(results.blocks).toHaveLength(2);
+
+        const checkpoint = JSON.parse(fs.readFileSync(newCheckpointJSON).toString("utf-8"));
+        expect(checkpoint.lastBlock).toBe(7);
+    });
+
     test("fabric-query2 runs successfully with saving checkpoint up to block #6 w/o state information", async () => {
         const resultJSON = path.join(artifactDir("peer0.org1.example.com"), "result.fabric-query.checkpoint6.json");
         const queryConfigJSON = path.join(artifactDir("peer0.org1.example.com"), "fabric-query-config.json");
