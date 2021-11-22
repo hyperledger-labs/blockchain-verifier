@@ -30,6 +30,10 @@ function findKeyFile(dir: string) {
     }
     return path.join(dir, file);
 }
+function shouldPrepareFabric() {
+    return process.env["BCV_IT_NO_NEW_NETWORK"] == null;
+}
+
 const execOptions: ExecFileSyncOptionsWithBufferEncoding = {
     stdio: ["ignore", "inherit", "inherit"],
     encoding: "utf8"
@@ -132,39 +136,43 @@ function countResults(results: any, target?: CheckTarget, checkerID?: string): C
 const CHECKER_ID_BLOCK_HASH_COMPARISON = "GenericMultipleLedgerBlockPlugin.blockHashComparisonWithOtherSource";
 
 async function startNetworkV22(version: string) {
-    try {
-        execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
-    } catch (e) {
-        // Ignore
-    }
-
-    execFileSync("npm", ["run", "build"], execOptions);
-
-    execFileSync(helperScriptPath("prepare.sh"), versionCombinations[version], {
-        ...execOptions,
-        env: {
-            ...process.env,
-            COMPOSE_PROJECT_NAME: "fabric"
+    if (shouldPrepareFabric()) {
+        try {
+            execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
+        } catch (e) {
+            // Ignore
         }
-    });
-    execFileSync(helperScriptPath("fabcar.sh"), [], execOptions);
-    execFileSync(helperScriptPath("copy-files.sh"), [], execOptions);
+
+        execFileSync("npm", ["run", "build"], execOptions);
+
+        execFileSync(helperScriptPath("prepare.sh"), versionCombinations[version], {
+            ...execOptions,
+            env: {
+                ...process.env,
+                COMPOSE_PROJECT_NAME: "fabric"
+            }
+        });
+        execFileSync(helperScriptPath("fabcar.sh"), [], execOptions);
+        execFileSync(helperScriptPath("copy-files.sh"), [], execOptions);
+    }
 
     fabricQueryConfig.client.keyFile = findKeyFile(path.join(mspAdminDir("org1.example.com"), "keystore"));
 }
 
 async function startNetworkV23(version: string) {
-    try {
-        execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
-    } catch (e) {
-        // Ignore
+    if (shouldPrepareFabric()) {
+        try {
+            execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
+        } catch (e) {
+            // Ignore
+        }
+
+        execFileSync("npm", ["run", "build"], execOptions);
+
+        execFileSync(helperScriptPath("prepare.sh"), versionCombinations[version], execOptions);
+        execFileSync(helperScriptPath("fabcar.sh"), [], execOptions);
+        execFileSync(helperScriptPath("copy-files.sh"), [], execOptions);
     }
-
-    execFileSync("npm", ["run", "build"], execOptions);
-
-    execFileSync(helperScriptPath("prepare.sh"), versionCombinations[version], execOptions);
-    execFileSync(helperScriptPath("fabcar.sh"), [], execOptions);
-    execFileSync(helperScriptPath("copy-files.sh"), [], execOptions);
 
     fabricQueryConfig.client.keyFile = findKeyFile(path.join(mspAdminDir("org1.example.com"), "keystore"));
 }
@@ -184,10 +192,12 @@ describe.each<TestConfig>([
     });
 
     afterAll(async() => {
-        try {
-            execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
-        } catch (e) {
-            // Ignore
+        if (shouldPrepareFabric()) {
+            try {
+                execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
+            } catch (e) {
+                // Ignore
+            }
         }
     });
 
