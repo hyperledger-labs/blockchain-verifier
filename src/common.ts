@@ -19,6 +19,7 @@ export interface VerificationConfig {
     checkpointToResume?: BCVCheckpointData;
 
     endBlock?: number;
+    checkBlockCount?: number;
 }
 
 export interface VerificationResult {

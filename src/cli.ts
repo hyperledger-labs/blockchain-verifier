@@ -34,6 +34,7 @@ program.version("v0.4.0")
     .option("-s, --save-checkpoint <checkpoint>", "Save checkpoint after checks")
     .option("-r, --resume-checkpoint <checkpoint>", "Resume checks from checkpoint")
     .option("-e, --end-block <end block>", "Stop the checks at the specified block (inclusive)")
+    .option("-b, --check-block-count <check block count>", "Maximum number of blocks to be checked")
     .option("-i, --skip-key-value", "Skip key value processing even if checkpoint is specified")
     .arguments("<command>")
     .action((command) => {
@@ -93,7 +94,8 @@ async function start(): Promise<number> {
         saveCheckpoint: saveCheckpoint,
         checkpointToResume: resumeData,
         endBlock: opts.endBlock == null ? undefined : parseInt(opts.endBlock),
-        skipKeyValue: opts.skipKeyValue
+        skipKeyValue: opts.skipKeyValue,
+        checkBlockCount: opts.checkBlockCount == null ? undefined : parseInt(opts.checkBlockCount)
     });
 
     const { resultSet, checkpointData } = await bcv.verify();
