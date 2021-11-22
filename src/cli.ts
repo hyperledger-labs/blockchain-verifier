@@ -92,7 +92,7 @@ async function start(): Promise<number> {
         checkersToExclude: checkersToExclude,
         saveCheckpoint: saveCheckpoint,
         checkpointToResume: resumeData,
-        endBlock: opts.endBlock,
+        endBlock: opts.endBlock == null ? undefined : parseInt(opts.endBlock),
         skipKeyValue: opts.skipKeyValue
     });
 
