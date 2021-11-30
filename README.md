@@ -7,7 +7,7 @@ The goal of this tool is to verify the integrity of blockchain blocks and transa
 ## Supported Blockchain Platforms
 
 - Hyperledger Fabric v1.4
-- Hyperledger Fabric v2.2 & v2.3
+- Hyperledger Fabric v2.2, v2.3 & v2.4
 
 ## Prerequisites
 
