@@ -1,0 +1,8 @@
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+repository:
+  name: blockchain-verifier
+  description: Blockchain verification tool
+  archived: true
+  private: false
