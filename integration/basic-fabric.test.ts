@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-import { execFileSync, ExecFileSyncOptionsWithBufferEncoding } from "child_process";
+import { execFileSync, ExecFileSyncOptionsWithStringEncoding } from "child_process";
 import fs from "fs";
 import path from "path";
 
@@ -34,9 +34,9 @@ function shouldPrepareFabric() {
     return process.env["BCV_IT_NO_NEW_NETWORK"] == null;
 }
 
-const execOptions: ExecFileSyncOptionsWithBufferEncoding = {
+const execOptions: ExecFileSyncOptionsWithStringEncoding = {
     stdio: ["ignore", "inherit", "inherit"],
-    encoding: "utf8"
+    encoding: "utf-8"
 };
 const versionCombinations: {[version: string]: string[]} = {
     "2.2.3": ["2.2.3", "1.5.2"],
