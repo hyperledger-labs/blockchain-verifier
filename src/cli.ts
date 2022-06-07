@@ -48,21 +48,21 @@ if (cliCommand == null || CLI_COMMANDS[cliCommand] == null) {
     process.exit(1);
 } else {
     CLI_COMMANDS[cliCommand]()
-    .then((retCode) => {
-        process.exit(retCode);
-    })
-    .catch((error) => {
-        if (error instanceof BCVerifierError) {
-            console.error("BCVerifier Error: %s", error.message);
-            console.error(error.stack);
-        } else if (error instanceof Error) {
-            console.error("Runtime Error: (%s) %s", error.name, error.message);
-            console.error(error.stack);
-        } else {
-            console.error("Exception during execution: %s", error);
-        }
-        process.exit(1);
-    });
+        .then((retCode) => {
+            process.exit(retCode);
+        })
+        .catch((error) => {
+            if (error instanceof BCVerifierError) {
+                console.error("BCVerifier Error: %s", error.message);
+                console.error(error.stack);
+            } else if (error instanceof Error) {
+                console.error("Runtime Error: (%s) %s", error.name, error.message);
+                console.error(error.stack);
+            } else {
+                console.error("Exception during execution: %s", error);
+            }
+            process.exit(1);
+        });
 }
 
 async function start(): Promise<number> {

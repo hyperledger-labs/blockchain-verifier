@@ -13,6 +13,7 @@ import { BlockResultPusher, ResultSet } from "../result-set";
 
 export default class GenericBlockIntegrityChecker implements BlockCheckPlugin {
     public checkerName = "GenericBlockIntegrityChecker";
+
     private provider: BlockProvider;
     private results: BlockResultPusher;
 

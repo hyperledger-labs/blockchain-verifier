@@ -42,7 +42,7 @@ test("Correct chain", async () => {
                     expect(checkResult.operands[0].name).toBe(targetBlocks[i] + ".Hash");
                     expect(checkResult.operands[0].value).toEqual(targetBlocks[i].getHashValue());
                     expect(checkResult.operands[1].value)
-                     .toEqual(targetBlocks[i].calcHashValue(HashValueType.HASH_FOR_SELF));
+                        .toEqual(targetBlocks[i].calcHashValue(HashValueType.HASH_FOR_SELF));
                 }
             } else if (checkResult.checkerID === "GenericBlockIntegrityChecker.checkPreviousHash") {
                 expect(checkResult.result).toBe(ResultCode.OK);
@@ -57,7 +57,7 @@ test("Correct chain", async () => {
                         expect(checkResult.operands[0].name).toBe(targetBlocks[i] + ".PreviousHash");
                         expect(checkResult.operands[0].value).toEqual(targetBlocks[i].getPrevHashValue());
                         expect(checkResult.operands[1].value)
-                         .toEqual(targetBlocks[i].calcHashValue(HashValueType.HASH_FOR_PREV));
+                            .toEqual(targetBlocks[i].calcHashValue(HashValueType.HASH_FOR_PREV));
                     }
                 }
             }
@@ -93,7 +93,7 @@ test("Incorrect chain", async () => {
                         expect(checkResult.operands[0].name).toBe(targetBlocks[i] + ".Hash");
                         expect(checkResult.operands[0].value).toEqual(targetBlocks[i].getHashValue());
                         expect(checkResult.operands[1].value)
-                         .toEqual(targetBlocks[i].calcHashValue(HashValueType.HASH_FOR_SELF));
+                            .toEqual(targetBlocks[i].calcHashValue(HashValueType.HASH_FOR_SELF));
                     }
                 } else {
                     expect(checkResult.result).toBe(ResultCode.OK);
@@ -102,7 +102,7 @@ test("Incorrect chain", async () => {
                         expect(checkResult.operands[0].name).toBe(targetBlocks[i] + ".Hash");
                         expect(checkResult.operands[0].value).toEqual(targetBlocks[i].getHashValue());
                         expect(checkResult.operands[1].value)
-                         .toEqual(targetBlocks[i].calcHashValue(HashValueType.HASH_FOR_SELF));
+                            .toEqual(targetBlocks[i].calcHashValue(HashValueType.HASH_FOR_SELF));
                     }
                 }
             } else if (checkResult.checkerID === "GenericBlockIntegrityChecker.checkPreviousHash") {
@@ -121,7 +121,7 @@ test("Incorrect chain", async () => {
                         expect(checkResult.operands[0].name).toBe(targetBlocks[i] + ".PreviousHash");
                         expect(checkResult.operands[0].value).toEqual(targetBlocks[i].getPrevHashValue());
                         expect(checkResult.operands[1].value)
-                         .toEqual(targetBlocks[i].calcHashValue(HashValueType.HASH_FOR_PREV));
+                            .toEqual(targetBlocks[i].calcHashValue(HashValueType.HASH_FOR_PREV));
                     }
                 }
             }

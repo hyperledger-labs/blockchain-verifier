@@ -136,6 +136,6 @@ describe("BlockProvider", () => {
         });
 
         expect(provider.getKeyValueState(correctBlocks[1].getTransactions()[0] as KeyValueTransaction))
-              .rejects.toThrowError();
+            .rejects.toThrowError();
     });
 });

@@ -47,12 +47,15 @@ class SimpleKeyValue implements KeyValue {
             (v) => v.version.compare(this.pair.version) === 0
         );
     }
+
     public getKey(): Buffer {
         return this.pair.key;
     }
+
     public getValue(): Buffer {
         return this.pair.value;
     }
+
     public getVersion(): Buffer {
         return this.pair.version;
     }
@@ -61,6 +64,7 @@ class SimpleKeyValue implements KeyValue {
     public async getTransaction(): Promise<Transaction | null> {
         return this.pair.transaction;
     }
+
     public async getHistory(): Promise<SimpleKeyValue[]> {
         let ret: SimpleKeyValue[] = [];
 
@@ -71,7 +75,7 @@ class SimpleKeyValue implements KeyValue {
                 } else {
                     ret.push(new SimpleKeyValue(this.keyValueManager, pair));
                 }
-        });
+            });
 
         return ret;
     }
@@ -111,6 +115,7 @@ export class SimpleKeyValueState implements KeyValueState {
             throw new BCVerifierNotFound();
         }
     }
+
     public getKeys(): KeyValue[] {
         const keyValues = [];
         for (const key in this.values) {
@@ -133,15 +138,19 @@ export class AppKeyValueTransaction implements AppTransaction {
         this.writeSet = writeSet;
         this.state = state;
     }
+
     public getInput(): KeyValuePair[] {
         return this.readSet;
     }
+
     public getOutput(): KeyValuePair[] {
         return this.writeSet;
     }
+
     public getState(): SimpleKeyValueState {
         return this.state;
     }
+
     public getTransaction(): KeyValueTransaction {
         return this.transaction;
     }

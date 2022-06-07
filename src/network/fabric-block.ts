@@ -155,31 +155,34 @@ export class FabricBlockSource implements BlockSource {
 
         return new Promise((resolve, reject) => {
             read(this.file, buffer, 0, bi.size, bi.offset,
-                (err, bytesRead, bufferRead) => {
-                    if (err == null && bytesRead === bi.size) {
-                        const b = FabricBlock.fromFileBytes(bufferRead);
-                        if (this.privateDB != null) {
-                            b.addPrivateData(this.privateDB).then(() => {
-                                resolve(b);
-                            }, (error) => { reject(error); });
-                        } else {
-                            resolve(b);
-                        }
-                    } else {
-                        reject(err);
-                    }
-                }
+                 (err, bytesRead, bufferRead) => {
+                     if (err == null && bytesRead === bi.size) {
+                         const b = FabricBlock.fromFileBytes(bufferRead);
+                         if (this.privateDB != null) {
+                             b.addPrivateData(this.privateDB).then(() => {
+                                 resolve(b);
+                             }, (error) => { reject(error); });
+                         } else {
+                             resolve(b);
+                         }
+                     } else {
+                         reject(err);
+                     }
+                 }
             );
         });
     }
+
     public async getBlockHash(blockNumber: number): Promise<Buffer> {
         const block = await this.getBlock(blockNumber);
 
         return block.getHashValue();
     }
+
     public async getBlockHeight(): Promise<number> {
         return this.blockInfo.length;
     }
+
     public async getBlockRange(blockStart: number, blockEnd: number): Promise<FabricBlock[]> {
         let b = 0;
         const result: FabricBlock[] = [];
@@ -204,6 +207,7 @@ export class FabricBlockSource implements BlockSource {
             return "block";
         }
     }
+
     public getSourceOrganizationID(): string {
         return "file";
     }

@@ -17,6 +17,7 @@ import { BlockResultPusher, ResultSet } from "../result-set";
 
 export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
     public checkerName = "FabricBlockIntegrityChecker";
+
     private provider: BlockProvider;
     private config: FabricConfigCache;
     private results: BlockResultPusher;
@@ -50,9 +51,9 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
 
     private checkLastConfigIndex(index: number, block: FabricBlock): void {
         this.results.addResult("checkLastConfigIndex",
-            ResultPredicate.LE,
-            { name: block + ".Metadata[1].LastConfig.Value", value: index },
-            { name: block + ".Number", value: block.getBlockNumber() });
+                               ResultPredicate.LE,
+                               { name: block + ".Metadata[1].LastConfig.Value", value: index },
+                               { name: block + ".Number", value: block.getBlockNumber() });
     }
 
     private async checkLastConfig(block: FabricBlock): Promise<FabricConfigTransactionInfo> {
@@ -72,11 +73,11 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
             const signature = lastConfig.signatures[i];
 
             this.results.addResult("CheckLastConfig",
-                ResultPredicate.INVOKE,
-                { name: "VerifyMetadataSignature", value: verifyMetadataSignature },
-                { name: block.toString(), value: block },
-                { name: block + ".Metadata[1].LastConfig", value: lastConfigValue },
-                { name: block + ".Metadata[1].Signature[" + i + "]", value: signature }
+                                   ResultPredicate.INVOKE,
+                                   { name: "VerifyMetadataSignature", value: verifyMetadataSignature },
+                                   { name: block.toString(), value: block },
+                                   { name: block + ".Metadata[1].LastConfig", value: lastConfigValue },
+                                   { name: block + ".Metadata[1].Signature[" + i + "]", value: signature }
             );
         }
 
@@ -105,19 +106,19 @@ export default class FabricBlockIntegrityChecker implements BlockCheckPlugin {
         for (const i in signatures.signatures) {
             const signature = signatures.signatures[i];
             this.results.addResult("CheckMetadataSignature",
-                ResultPredicate.INVOKE,
-                { name: "VerifyMetadataSignature", value: verifyMetadataSignature },
-                { name: block.toString(), value: block },
-                { name: "None", value: Buffer.from(signatures.value) },
-                { name: block + ".Metadata[0].Signature[" + i + "]", value: signature }
+                                   ResultPredicate.INVOKE,
+                                   { name: "VerifyMetadataSignature", value: verifyMetadataSignature },
+                                   { name: block.toString(), value: block },
+                                   { name: "None", value: Buffer.from(signatures.value) },
+                                   { name: block + ".Metadata[0].Signature[" + i + "]", value: signature }
             );
 
             // VerifySignatureHeader(signature.signature_header, ordererMSPs)
             await this.results.addAsyncResult("CheckLastConfig",
-                ResultPredicate.INVOKE,
-                { name: "VerifySignatureHeader", value: verifySignatureHeader },
-                { name: block + ".Metadata[1].Signature.Creator", value: signature.signature_header },
-                { name: configInfo.transactionId + ".Config.OrdererMSPs", value: ordererMSPs }
+                                              ResultPredicate.INVOKE,
+                                              { name: "VerifySignatureHeader", value: verifySignatureHeader },
+                                              { name: block + ".Metadata[1].Signature.Creator", value: signature.signature_header },
+                                              { name: configInfo.transactionId + ".Config.OrdererMSPs", value: ordererMSPs }
             );
         }
     }

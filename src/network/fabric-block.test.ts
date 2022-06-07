@@ -29,7 +29,7 @@ describe("FabricBlockSource", () => {
             })).resolves.toBeDefined();
 
             expect(FabricBlockSource.createFromConfig({
-                 ledgerStore: path.join(dataPath, dataConfig.ledgers[0].ledgerStore)
+                ledgerStore: path.join(dataPath, dataConfig.ledgers[0].ledgerStore)
             })).resolves.toBeDefined();
 
             const source = await FabricBlockSource.createFromConfig({
