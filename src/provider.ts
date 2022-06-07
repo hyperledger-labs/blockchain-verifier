@@ -12,7 +12,6 @@ import { BlockSource } from "./network-plugin";
 // Simple in-memory cacher
 export class BlockProvider {
     private source: BlockSource;
-
     private blocks: { [blockNumber: number]: Block };
     private transactions: { [transactionID: string]: Transaction };
     private transactionTypeIndex: { [transactionType: number]: Transaction[] };
@@ -143,6 +142,7 @@ export class KeyValueBlockProvider extends BlockProvider {
 
         return this.keyValueManager.getState(tx.getBlock() as KeyValueBlock);
     }
+
     public getAppTransaction(transactionId: string) {
         return this.keyValueManager.getTransaction(transactionId);
     }

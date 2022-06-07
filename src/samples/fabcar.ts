@@ -49,7 +49,7 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                     result: ResultCode.ERROR,
                     predicate: ResultPredicate.EQ,
                     operands: [ { name: fabricTx.toString() + ".WriteSet.length", value: values.length },
-                                { name: "1", value: 1 } ]
+                        { name: "1", value: 1 } ]
                 });
                 console.error("ERROR: CreateCar should not write to more than one key");
                 console.debug("  Tx %s writes to keys %s", fabricTx.getTransactionID(),
@@ -60,7 +60,7 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                     result: ResultCode.OK,
                     predicate: ResultPredicate.EQ,
                     operands: [ { name: fabricTx.toString() + ".WriteSet.length", value: values.length },
-                                { name: "1", value: 1 } ]
+                        { name: "1", value: 1 } ]
                 });
 
                 const v = values[0];
@@ -70,8 +70,8 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                         result: ResultCode.ERROR,
                         predicate: ResultPredicate.EQ,
                         operands: [ { name: fabricTx.toString() + ".WriteSet[0].key", value: v.key.toString() },
-                                    { name: "fabcar\0" + func.args[0].toString(),
-                                      value: "fabcar\0" + func.args[0].toString() } ]
+                            { name: "fabcar\0" + func.args[0].toString(),
+                              value: "fabcar\0" + func.args[0].toString() } ]
                     });
                     console.error("ERROR: CreateCar should not write to other key than %s", func.args[0].toString());
                 } else {
@@ -80,8 +80,8 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                         result: ResultCode.OK,
                         predicate: ResultPredicate.EQ,
                         operands: [ { name: fabricTx.toString() + ".WriteSet[0].key", value: v.key.toString() },
-                                    { name: "fabcar\0" + func.args[0].toString(),
-                                      value: "fabcar\0" + func.args[0].toString() } ]
+                            { name: "fabcar\0" + func.args[0].toString(),
+                              value: "fabcar\0" + func.args[0].toString() } ]
                     });
 
                     const state = appTx.getState();
@@ -96,7 +96,7 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                             predicate: ResultPredicate.INVOKE,
                             operands: [ { name: "getValue(" + v.key + ")", value: v.key.toString() } ]
                         });
-                } catch (e) {
+                    } catch (e) {
                         if (e instanceof BCVerifierNotFound) {
                             resultSet.pushTransactionResult(fabricTx, {
                                 checkerID: CHECKER_ID,
@@ -124,7 +124,7 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                     result: ResultCode.ERROR,
                     predicate: ResultPredicate.EQ,
                     operands: [ { name: fabricTx.toString() + ".WriteSet.length", value: values.length },
-                                { name: "1", value: 1 } ]
+                        { name: "1", value: 1 } ]
                 });
 
                 console.error("ERROR: changeCarOwner should not write to more than one key");
@@ -136,7 +136,7 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                     result: ResultCode.OK,
                     predicate: ResultPredicate.EQ,
                     operands: [ { name: fabricTx.toString() + ".WriteSet.length", value: values.length },
-                                { name: "1", value: 1 } ]
+                        { name: "1", value: 1 } ]
                 });
 
                 const v = values[0];
@@ -146,8 +146,8 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                         result: ResultCode.ERROR,
                         predicate: ResultPredicate.EQ,
                         operands: [ { name: fabricTx.toString() + ".WriteSet[0].key", value: v.key.toString() },
-                                    { name: "fabcar\0" + func.args[0].toString(),
-                                      value: "fabcar\0" + func.args[0].toString() } ]
+                            { name: "fabcar\0" + func.args[0].toString(),
+                              value: "fabcar\0" + func.args[0].toString() } ]
                     });
 
                     console.error("ERROR: changeCarOwner should not write other cars than specified.");
@@ -158,8 +158,8 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                         result: ResultCode.OK,
                         predicate: ResultPredicate.EQ,
                         operands: [ { name: fabricTx.toString() + ".WriteSet[0].key", value: v.key.toString() },
-                                    { name: "fabcar\0" + func.args[0].toString(),
-                                      value: "fabcar\0" + func.args[0].toString() } ]
+                            { name: "fabcar\0" + func.args[0].toString(),
+                              value: "fabcar\0" + func.args[0].toString() } ]
                     });
 
                     if (v.isDelete === true) {
@@ -168,7 +168,7 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                             result: ResultCode.ERROR,
                             predicate: ResultPredicate.EQ,
                             operands: [ { name: fabricTx.toString() + ".WriteSet[0].isDelete", value: v.isDelete },
-                                        { name: "true", value: true } ]
+                                { name: "true", value: true } ]
                         });
 
                         console.error("ERROR: changeCarOwner should not delete the key");
@@ -178,7 +178,7 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                             result: ResultCode.OK,
                             predicate: ResultPredicate.EQ,
                             operands: [ { name: fabricTx.toString() + ".WriteSet[0].isDelete", value: v.isDelete },
-                                        { name: "true", value: true } ]
+                                { name: "true", value: true } ]
                         });
 
                         const newCar = JSON.parse(v.value.toString());
@@ -190,8 +190,8 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                                 predicate: ResultPredicate.EQ,
                                 operands: [ { name: fabricTx.toString() + ".WriteSet[0].value.owner",
                                               value: v.key.toString() },
-                                            { name: func.args[1].toString(),
-                                              value: func.args[1].toString() } ]
+                                { name: func.args[1].toString(),
+                                  value: func.args[1].toString() } ]
                             });
 
                             console.error("ERROR: changeCarOwner changes the owner to another person: %s",
@@ -203,8 +203,8 @@ export default class FabCarChecker extends CheckPlugin implements AppTransaction
                                 predicate: ResultPredicate.EQ,
                                 operands: [ { name: fabricTx.toString() + ".WriteSet[0].value.owner",
                                               value: v.key.toString() },
-                                            { name: func.args[1].toString(),
-                                              value: func.args[1].toString() } ]
+                                { name: func.args[1].toString(),
+                                  value: func.args[1].toString() } ]
                             });
 
                             console.log("INFO: Transaction %s: changeCarOwner is ok", fabricTx.getTransactionID());

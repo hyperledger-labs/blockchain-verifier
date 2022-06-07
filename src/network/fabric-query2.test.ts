@@ -167,11 +167,11 @@ describe("FabricQuery2Source", () => {
             await source.init();
 
             (queryObj.send as jest.Mock).mockClear().mockImplementation(() => (
-            {
-                queryResults: [
-                    Buffer.from("This is some block")
-                ]
-            }));
+                {
+                    queryResults: [
+                        Buffer.from("This is some block")
+                    ]
+                }));
 
             let i = 3;
             (FabricBlock.fromQueryBytes as jest.Mock).mockClear().mockImplementation(() => ({

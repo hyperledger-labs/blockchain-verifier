@@ -52,7 +52,6 @@ export class BCVerifier {
     private config: VerificationConfig;
     private network?: NetworkPlugin;
     private resultSet: ResultSet;
-
     private networkPlugin: NetworkPluginInfo;
 
     constructor(config: VerificationConfig) {

@@ -53,7 +53,6 @@ export class FabricQuery2Source implements BlockSource {
     protected identity: IdentityContext;
     protected peer: Endorser | null;
     protected query: Query;
-
     protected config: FabricQuery2PluginConfig;
     protected peerConfig: FabricQuery2PluginPeerConfig;
 
@@ -67,9 +66,9 @@ export class FabricQuery2Source implements BlockSource {
 
         this.identity = this.client.newIdentityContext(
             User.createUser("user", "",
-                this.config.client.mspID,
-                fs.readFileSync(this.config.client.certFile).toString(),
-                fs.readFileSync(this.config.client.keyFile).toString()
+                            this.config.client.mspID,
+                            fs.readFileSync(this.config.client.certFile).toString(),
+                            fs.readFileSync(this.config.client.keyFile).toString()
             ));
     }
 
@@ -95,9 +94,11 @@ export class FabricQuery2Source implements BlockSource {
     public getSourceID(): string {
         return util.format("%s", this.peerConfig.url);
     }
+
     public getSourceOrganizationID(): string {
         return this.peerConfig.mspID;
     }
+
     public async getBlock(blockNumber: number): Promise<FabricBlock> {
         const blockBytes = await this.queryChaincode(FUNC_GET_BLOCK, this.config.channel, blockNumber.toString());
 
@@ -116,11 +117,13 @@ export class FabricQuery2Source implements BlockSource {
         }
         return result;
     }
+
     public async getBlockHash(blockNumber: number): Promise<Buffer> {
         const block = await this.getBlock(blockNumber);
 
         return block.getHashValue();
     }
+
     public async getBlockHeight(): Promise<number> {
         const infoBytes = await this.queryChaincode(FUNC_GET_CHAIN_INFO, this.config.channel);
         const info = common.BlockchainInfo.decode(infoBytes);
@@ -131,6 +134,7 @@ export class FabricQuery2Source implements BlockSource {
             return info.height.toNumber();
         }
     }
+
     public async findBlockByTransaction(txID: string): Promise<FabricBlock> {
         const block = await this.queryChaincode(FUNC_GET_BLOCK_BY_TXID, this.config.channel, txID);
 

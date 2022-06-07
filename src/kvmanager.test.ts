@@ -148,4 +148,4 @@ describe("SimpleKeyValueManager", () => {
         expect(manager.getNextDesiredBlockNumber()).toBe(101);
         expect(() => manager.getState(correctKVBlocks[0])).toThrow(BCVerifierNotFound);
     });
- });
+});

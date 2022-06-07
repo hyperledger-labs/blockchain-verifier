@@ -2,7 +2,7 @@
  * Generic block checker plugin comparing with multiple ledgers
  *
  * Copyright 2021 Hitachi America, Ltd.
- * 
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,6 +13,7 @@ import { BlockResultPusher, ResultSet } from "../result-set";
 
 export default class GenericMultipleLedgerBlockPlugin extends MultipleLedgerCheckPlugin implements BlockCheckPlugin {
     public readonly checkerName = "GenericMultipleLedgerBlockPlugin";
+
     public results: BlockResultPusher;
 
     public constructor(preferredBlockProvider: BlockProvider, otherProviders: BlockProvider[], resultSet: ResultSet) {
@@ -32,13 +33,13 @@ export default class GenericMultipleLedgerBlockPlugin extends MultipleLedgerChec
                 const block = await provider.getBlock(blockNumber);
 
                 this.results.addResult("blockHashComparisonWithOtherSource", ResultPredicate.EQBIN,
-                    {
-                        name: `${baseSourceId}.${baseBlock}.Hash`,
-                        value: baseBlock.getHashValue()
-                    }, {
-                        name: `${provider.getSourceID()}.${block}.Hash`,
-                        value: block.getHashValue()
-                    });
+                                       {
+                                           name: `${baseSourceId}.${baseBlock}.Hash`,
+                                           value: baseBlock.getHashValue()
+                                       }, {
+                                           name: `${provider.getSourceID()}.${block}.Hash`,
+                                           value: block.getHashValue()
+                                       });
             } catch (e) {
                 // Ignore error because some source might not have some block
             }

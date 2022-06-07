@@ -68,9 +68,11 @@ export class BlockResultPusher {
         this.pluginName = pluginName;
         this.resultSet = resultSet;
     }
+
     public setBlock(block: Block) {
         this.block = block;
     }
+
     public addResult(functionName: string, predicate: ResultPredicate, ...values: ResultOperand[]): boolean {
         if (this.block == null) {
             throw new BCVerifierError("No block set for result");
@@ -86,6 +88,7 @@ export class BlockResultPusher {
 
         return result;
     }
+
     public async addAsyncResult(functionName: string, predicate: ResultPredicate.INVOKE,
                                 ...values: ResultOperand[]): Promise<boolean> {
         if (this.block == null) {
@@ -124,9 +127,11 @@ export class TransactionResultPusher {
         this.pluginName = pluginName;
         this.resultSet = resultSet;
     }
+
     public setTransaction(transaction: Transaction) {
         this.transaction = transaction;
     }
+
     public addResult(functionName: string, predicate: ResultPredicate, ...values: ResultOperand[]): boolean {
         if (this.transaction == null) {
             throw new BCVerifierError("No transaction set for result");
@@ -142,6 +147,7 @@ export class TransactionResultPusher {
         });
         return result;
     }
+
     public async addAsyncResult(functionName: string, predicate: ResultPredicate.INVOKE,
                                 ...values: ResultOperand[]): Promise<boolean> {
         if (this.transaction == null) {
@@ -158,6 +164,7 @@ export class TransactionResultPusher {
         });
         return result;
     }
+
     public addSkipResult(functionName: string, reason: string): void {
         if (this.transaction == null) {
             throw new BCVerifierError("No transaction set for result");
@@ -225,6 +232,7 @@ export class ResultSet {
 
         return results;
     }
+
     public getTransactionResults(): TransactionResult[] {
         const results: TransactionResult[] = [];
 

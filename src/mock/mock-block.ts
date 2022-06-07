@@ -26,18 +26,23 @@ export class MockTransaction implements Transaction {
         this.block = block;
         this.index = index;
     }
+
     public getBlock(): Block {
         return this.block;
     }
+
     public getIndexInBlock(): number {
         return this.index;
     }
+
     public getTransactionID(): string {
         return this.transactionID;
     }
+
     public getTransactionType(): number {
         return this.transactionType;
     }
+
     public async getKeyValueState(): Promise<KeyValueState> {
         throw new BCVerifierNotImplemented();
     }
@@ -65,15 +70,19 @@ export class MockBlock implements Block {
             this.transactions.push(new MockTransaction(this, transaction, parseInt(i, 10)));
         }
     }
+
     public getBlockNumber(): number {
         return this.blockNumber;
     }
+
     public getHashValue(): Buffer {
         return this.hashSelf;
     }
+
     public getPrevHashValue(): Buffer {
         return this.hashPrev;
     }
+
     public calcHashValue(hash: HashValueType) {
         switch (hash) {
             case HashValueType.HASH_FOR_PREV:
@@ -82,9 +91,11 @@ export class MockBlock implements Block {
                 return this.calcHashSelf;
         }
     }
+
     public getRaw(): Buffer {
         return Buffer.alloc(0);
     }
+
     public getTransactions(): Transaction[] {
         return this.transactions;
     }
@@ -106,30 +117,37 @@ export class MockSource implements BlockSource {
             this.useFindTransaction = true;
         }
     }
+
     public getSourceID() {
         return this.sourceID;
     }
+
     public getSourceOrganizationID() {
         return this.orgID;
     }
+
     public async getBlock(num: number): Promise<Block> {
         if (num < 0 || num >= this.blocks.length) {
             throw new BCVerifierError(format("Block %d not found", num));
         }
         return this.blocks[num];
     }
+
     public async getBlockHash(num: number): Promise<Buffer> {
         if (num < 0 || num >= this.blocks.length) {
             throw new BCVerifierError(format("Block %d not found", num));
         }
         return this.blocks[num].getHashValue();
     }
+
     public async getBlockHeight(): Promise<number> {
         return this.blocks.length;
     }
+
     public async getBlockRange(start: number, end: number): Promise<Block[]> {
         return this.blocks.slice(start, end + 1);
     }
+
     public async findBlockByTransaction(transactionID: string): Promise<Block> {
         if (this.useFindTransaction) {
             for (const b of this.blocks) {
@@ -183,9 +201,11 @@ export class MockKVTransaction extends MockTransaction implements KeyValueTransa
             }
         }
     }
+
     public getWriteSet() {
         return this.writeSet;
     }
+
     public getReadSet() {
         return this.readSet;
     }
@@ -205,6 +225,7 @@ export class MockKVBlock extends MockBlock implements KeyValueBlock {
             ));
         }
     }
+
     public getTransactions(): KeyValueTransaction[] {
         return this.kvTransactions;
     }
@@ -232,9 +253,9 @@ export const sampleRWSets: SampleRWSet[] = [
 
 export const correctKVBlocks = [
     new MockKVBlock(0, Buffer.from("ABCD"), Buffer.from(""), Buffer.from("ABCD"), Buffer.from("PABCD"),
-                  [ { id: "Tx1", type: 1, rwset: sampleRWSets[1] }, { id: "Tx2", type: 2, rwset: sampleRWSets[0] }]),
+                    [ { id: "Tx1", type: 1, rwset: sampleRWSets[1] }, { id: "Tx2", type: 2, rwset: sampleRWSets[0] }]),
     new MockKVBlock(1, Buffer.from("XYZW"), Buffer.from("PABCD"), Buffer.from("XYZW"), Buffer.from("PABCD"),
-                  [ { id: "Tx3", type: 3, rwset: sampleRWSets[0] }, { id: "Tx4", type: 1, rwset: sampleRWSets[2] }]),
+                    [ { id: "Tx3", type: 3, rwset: sampleRWSets[0] }, { id: "Tx4", type: 1, rwset: sampleRWSets[2] }]),
     new MockKVBlock(2, Buffer.from("EFGH"), Buffer.from("XYZW"), Buffer.from("EFGH"), Buffer.from("XYZW"),
-                  [ { id: "Tx5", type: 1, rwset: sampleRWSets[3] }, { id: "Tx6", type: 1, rwset: sampleRWSets[4] }]),
+                    [ { id: "Tx5", type: 1, rwset: sampleRWSets[3] }, { id: "Tx6", type: 1, rwset: sampleRWSets[4] }]),
 ];

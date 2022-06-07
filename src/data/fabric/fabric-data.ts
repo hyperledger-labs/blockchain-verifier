@@ -45,6 +45,7 @@ class VarBuffer {
         }
         return ret;
     }
+
     public readBytes(len: number): Buffer {
         const slice = this.buffer.slice(this.offset, this.offset + len);
         this.offset += len;
@@ -117,6 +118,7 @@ export class FabricBlock implements KeyValueBlock {
     public static fromFileBytes(bytes: Buffer) {
         return new FabricBlock({ fromFile: true, data: bytes });
     }
+
     public static fromQueryBytes(bytes: Buffer) {
         return new FabricBlock({ fromFile: false, data: bytes });
     }
@@ -182,7 +184,7 @@ export class FabricBlock implements KeyValueBlock {
 
             // XXX: Should use long for header.number
             const number = typeof(protoBlock.header.number) === "number" ? protoBlock.header.number
-                        : protoBlock.header.number.toNumber();
+                : protoBlock.header.number.toNumber();
 
             this.rawBlock = {
                 header : { number: number,
@@ -330,6 +332,7 @@ export enum FabricTransactionType {
 
 export class FabricTransaction implements KeyValueTransaction {
     public static KEY_NS_SEPARATOR = Buffer.from([0x00]);
+
     public static getConfigTxName(blockNumber: number) {
         return format("config.%d", blockNumber);
     }
@@ -337,7 +340,6 @@ export class FabricTransaction implements KeyValueTransaction {
     public signature: Buffer;
     public header: any;
     public data: any;
-
     public block: FabricBlock;
     public validity: boolean;
     public rawData: Buffer;
@@ -540,6 +542,7 @@ export class FabricAction {
     public getProposalBytes(): Buffer {
         return Buffer.from(this.rawPayload.chaincode_proposal_payload);
     }
+
     public getResponseBytes(): Buffer {
         if (this.rawPayload.action == null || this.rawPayload.action.proposal_response_payload == null) {
             throw new BCVerifierError("Response is missing in an action payload");
@@ -547,6 +550,7 @@ export class FabricAction {
 
         return Buffer.from(this.rawPayload.action.proposal_response_payload);
     }
+
     public getEndorsersBytes(): Buffer[] {
         if (this.rawPayload.action == null || this.rawPayload.action.endorsements == null) {
             throw new BCVerifierError("Endorsement is missing in an action payload");
@@ -566,19 +570,24 @@ export class FabricAction {
     public getHeader(): any {
         return this.decoded.header;
     }
+
     public getProposal(): any {
         return this.decoded.payload.chaincode_proposal_payload;
     }
+
     public getResponsePayload(): any {
         return this.decoded.payload.action.proposal_response_payload;
     }
+
     public getEndorsements(): any[] {
         return this.decoded.payload.action.endorsements;
     }
+
     public getRWSets(): any {
         const payload = this.getResponsePayload();
         return payload.extension.results.ns_rwset;
     }
+
     public getFunction(): FabricFunctionInfo | null {
         const proposal = this.getProposal();
         const args = proposal.input.chaincode_spec.input.args;
@@ -593,6 +602,7 @@ export class FabricAction {
             args: args.slice(1)
         };
     }
+
     public async addPrivateData(channelName: string, privateDB: any) {
         const rwsets = this.getRWSets();
 
@@ -619,6 +629,7 @@ export class FabricAction {
 
 export class FabricPrivateRWSet {
     public static PRIVATE_DATA_PREFIX = Buffer.from([0x02]);
+
     public static KEY_SEPARATOR = Buffer.from([0x00]);
 
     public static async queryPrivateStore(privateDB: any, channelName: string, transaction: FabricTransaction,
@@ -636,6 +647,7 @@ export class FabricPrivateRWSet {
             return null;
         }
     }
+
     public static buildKey(channelName: string, blockNumber: number, txNumber: number,
                            namespace: string, collection: string): Buffer {
         const blockNumberEncoded = encodeOrderPreservingInt(blockNumber);
@@ -652,6 +664,7 @@ export class FabricPrivateRWSet {
             Buffer.from(collection, "utf-8")
         ]);
     }
+
     public static calcHash(data: Buffer): Buffer {
         const hash = createHash("sha256");
         hash.update(data);
@@ -681,9 +694,11 @@ export class FabricPrivateRWSet {
     public getRWSet() {
         return this.decoded;
     }
+
     public getRWSetBytes() {
         return this.rwSetBytes;
     }
+
     public toString() {
         return format("FabricPrivateDB(%s)", this.name);
     }

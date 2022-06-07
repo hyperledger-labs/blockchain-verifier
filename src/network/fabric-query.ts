@@ -83,9 +83,11 @@ export class FabricQuerySource implements BlockSource {
     public getSourceID(): string {
         return util.format("%s", this.clientConfig.peerName);
     }
+
     public getSourceOrganizationID(): string {
         return this.clientConfig.mspID;
     }
+
     public async getBlock(blockNumber: number): Promise<FabricBlock> {
         if (this.channel == null) {
             throw new BCVerifierError("fabric client is not initialized. Call init()");
@@ -94,6 +96,7 @@ export class FabricQuerySource implements BlockSource {
                                                     this.clientConfig.credentials.useAdmin, true);
         return FabricBlock.fromQueryBytes(block);
     }
+
     public async getBlockRange(blockStart: number, blockEnd: number): Promise<FabricBlock[]> {
         const result: FabricBlock[] = [];
         if (blockEnd < blockStart) {
@@ -106,11 +109,13 @@ export class FabricQuerySource implements BlockSource {
         }
         return result;
     }
+
     public async getBlockHash(blockNumber: number): Promise<Buffer> {
         const block = await this.getBlock(blockNumber);
 
         return block.getHashValue();
     }
+
     public async getBlockHeight(): Promise<number> {
         if (this.channel == null) {
             throw new BCVerifierError("fabric client is not initialized. Call init()");
@@ -120,6 +125,7 @@ export class FabricQuerySource implements BlockSource {
 
         return info.height;
     }
+
     public async findBlockByTransaction(txID: string): Promise<FabricBlock> {
         if (this.channel == null) {
             throw new BCVerifierError("fabric client is not initialized. Call init()");
