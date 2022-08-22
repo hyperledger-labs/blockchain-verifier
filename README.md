@@ -6,7 +6,7 @@ The goal of this tool is to verify the integrity of blockchain blocks and transa
 
 ## Supported Blockchain Platforms
 
-- Hyperledger Fabric v1.4
+- Hyperledger Fabric v1.4 (*to be deprecated*)
 - Hyperledger Fabric v2.2, v2.3 & v2.4
 
 ## Prerequisites
@@ -59,9 +59,9 @@ Runs verification against a Hyperledger Fabric ledger file `/tmp/block/blockfile
 
 | Name            | Supported Platform          | Description                                | Config value (`-c` option)             |
 |-----------------|-----------------------------|--------------------------------------------|----------------------------------------|
-| `fabric-block`  | Hyperledger Fabric v1.4/2.2 | Verify a ledger file and private DB        | Path to the ledger file or config JSON |
+| `fabric-block`  | Hyperledger Fabric v1.4/2.x | Verify a ledger file and private DB        | Path to the ledger file or config JSON |
 | `fabric-query`  | Hyperledger Fabric v1.4     | Verify blocks by querying to a peer        | Path to the query config file          |
-| `fabric-query2` | Hyperledger Fabric v2.2     | Verify blocks by querying to a peer (v2.x) | Path to the query config file (v2)     |
+| `fabric-query2` | Hyperledger Fabric v2.x     | Verify blocks by querying to a peer (v2.x) | Path to the query config file (v2)     |
 
 ### fabric-block
 
@@ -141,6 +141,8 @@ Example:
 ```
 
 ### fabric-query
+
+*To be deprecated*: Since Hyperledger Fabric v1.4 is no longer maintained, the support for v1.4 will be deprecated in a future release of Blockchain Verifier. This plugin will be also removed once the support is deprecated.
 
 This plugin checks blocks by obtaining them using `query` method to a peer.
 
