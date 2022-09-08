@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-2020 Hitachi America, Ltd.
+ * Copyright 2018-2022 Hitachi America, Ltd. & Hitachi, Ltd.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { openSync, read, readFileSync, readSync, statSync } from "fs";
-import level from "level";
+import { Level } from "level";
 import * as path from "path";
 import { format } from "util";
 
@@ -80,18 +80,6 @@ function readVarInt(file: number, position: number): [number, number] {
     }
 }
 
-function newLevel(db: string, opts: any): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-        level(db, opts, (error, obj) => {
-            if (error != null) {
-                reject(error);
-            } else {
-                resolve(obj);
-            }
-        });
-    });
-}
-
 export class FabricBlockSource implements BlockSource {
     public static async createFromConfig(config: FabricBlockConfig): Promise<FabricBlockSource> {
         const blockInfo: FabricBlockFileInfo = [];
@@ -126,8 +114,8 @@ export class FabricBlockSource implements BlockSource {
 
         let privateDB = null;
         if (config.privateDataStore != null) {
-            privateDB = await newLevel(config.privateDataStore,
-                                       { createIfMissing: false, keyEncoding: "binary", valueEncoding: "binary" });
+            privateDB = new Level(config.privateDataStore,
+                                  { createIfMissing: false, keyEncoding: "binary", valueEncoding: "binary" });
         }
 
         return new FabricBlockSource(config, file, blockInfo, privateDB);
@@ -136,9 +124,9 @@ export class FabricBlockSource implements BlockSource {
     private file: number;
     private blockInfo: FabricBlockFileInfo;
     private config: FabricBlockConfig;
-    private privateDB: any;
+    private privateDB: Level | null;
 
-    private constructor(config: FabricBlockConfig, file: number, blockInfo: FabricBlockFileInfo, privateDB: any) {
+    private constructor(config: FabricBlockConfig, file: number, blockInfo: FabricBlockFileInfo, privateDB: Level | null) {
         this.file = file;
         this.blockInfo = blockInfo;
         this.config = config;

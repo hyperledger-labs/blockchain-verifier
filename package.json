@@ -20,25 +20,25 @@
   "devDependencies": {
     "@types/asn1js": "^3.0.6",
     "@types/jest": "^28.1.7",
-    "@types/node": "^18.7.9",
+    "@types/node": "^18.7.16",
     "@types/pem": "^1.9.6",
-    "@typescript-eslint/eslint-plugin": "^5.33.1",
-    "@typescript-eslint/parser": "^5.33.1",
-    "eslint": "^8.22.0",
+    "@typescript-eslint/eslint-plugin": "^5.36.2",
+    "@typescript-eslint/parser": "^5.36.2",
+    "eslint": "^8.23.0",
     "jest": "^28.1.3",
     "ts-jest": "^28.0.8",
-    "typescript": "^4.7.4"
+    "typescript": "^4.8.2"
   },
   "dependencies": {
     "asn1js": "^3.0.5",
     "commander": "^9.4.0",
-    "fabric-ca-client": "^2.2.14",
+    "fabric-ca-client": "^2.2.15",
     "fabric-client": "^1.4.20",
-    "fabric-common": "^2.2.14",
-    "fabric-protos": "^2.2.14",
-    "level": "^7.0.0",
+    "fabric-common": "^2.2.15",
+    "fabric-protos": "^2.2.15",
+    "level": "^8.0.0",
     "pem": "^1.14.6",
-    "protobufjs": "^7.0.0"
+    "protobufjs": "^7.1.0"
   },
   "engines": {
     "node": "^10.15 || ^12.15 || >= 14.0.0"
