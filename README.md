@@ -298,7 +298,7 @@ Please also notice that application checkers will not be able to obtain history 
 
 ## Changes
 
-### v0.4.0 (to be released)
+### v0.4.0 (Sep. 9, 2022)
 
 - Add the checkpoint feature
 
