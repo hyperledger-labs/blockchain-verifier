@@ -39,9 +39,9 @@ const execOptions: ExecFileSyncOptionsWithStringEncoding = {
     encoding: "utf-8"
 };
 const versionCombinations: {[version: string]: string[]} = {
-    "2.2": ["2.2.6", "1.5.5"],
+    "2.2": ["2.2.9", "1.5.5"],
     "2.3": ["2.3.3", "1.5.5"],
-    "2.4": ["2.4.6", "1.5.5"]
+    "2.4": ["2.4.7", "1.5.5"]
 };
 
 const FABRIC_LEDGER_PATH = ["ledgersData", "chains", "chains"];
