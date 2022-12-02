@@ -40,7 +40,6 @@ const execOptions: ExecFileSyncOptionsWithStringEncoding = {
 };
 const versionCombinations: {[version: string]: string[]} = {
     "2.2": ["2.2.9", "1.5.5"],
-    "2.3": ["2.3.3", "1.5.5"],
     "2.4": ["2.4.7", "1.5.5"]
 };
 
@@ -160,7 +159,7 @@ async function startNetworkV22(version: string) {
     fabricQueryConfig.client.keyFile = findKeyFile(path.join(mspAdminDir("org1.example.com"), "keystore"));
 }
 
-async function startNetworkV23(version: string) {
+async function startNetworkV24(version: string) {
     if (shouldPrepareFabric()) {
         try {
             execFileSync(helperScriptPath("cleanup.sh"), [], execOptions);
@@ -185,8 +184,7 @@ type TestConfig = {
 
 describe.each<TestConfig>([
     { version: "2.2", startNetwork: startNetworkV22 },
-    { version: "2.3", startNetwork: startNetworkV23 },
-    { version: "2.4", startNetwork: startNetworkV23 }
+    { version: "2.4", startNetwork: startNetworkV24 }
 ])("Hyperledger Fabric $version", ({version, startNetwork}) => {
 
     beforeAll(async () => {
