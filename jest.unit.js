@@ -3,7 +3,12 @@
 /** @type {import('@jest/types').Config.InitialOptions} */
 const config = {
     transform: {
-        "^.+\\.tsx?$": "ts-jest"
+        "^.+\\.tsx?$": [
+            "ts-jest",
+            {
+                tsconfig: "tsconfig.test.json"
+            }
+        ]
     },
     testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.(tsx?)$",
     moduleFileExtensions: [
@@ -14,11 +19,6 @@ const config = {
         "json",
         "node"
     ],
-    globals: {
-        "ts-jest": {
-            tsconfig: "tsconfig.test.json"
-        }
-    },
     modulePathIgnorePatterns: [
         "<rootDir>/integration/"
     ]
