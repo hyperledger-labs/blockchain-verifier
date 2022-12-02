@@ -1,0 +1,33 @@
+{
+    "blockHeight": 11,
+    "hashes": [
+        "6de05b3f69cf24991b981c552b691426bb54cfd5b42503f87a83b31acdc1fc88",
+        "a689898c06fb509b5860dd17b01268c2459b7dc6e165a7140af86ebdc28fde58",
+        "e57605cc9ddf1c46a2b5af72778b0b8298ee8dc73b905b5e1590fc577d897777",
+        "da481feb15476e8778b1935be40597d3d45f5d474ef53b892c804c7950fc503d",
+        "4e574529841a2df494d6eeb1f4c0a97b7f90f8104662475bbe214e9e31e6abe8",
+        "3857cd0576679157640061f76f0dae50f9edbf30ac2762ee374b890e8cc36d29",
+        "d795c8c2fe531e08d107ad20fac4664554c3e7764cc73a0f84723e806e2cd7f4",
+        "1226ccd38d4c4bbd4907353be04f287335c46b866fc93441218cb655bc867889",
+        "3ef170fa84fd43a7098c3cdf2448233678a99132ba3c9f38500bfbb1757ed9d9",
+        "474ad3e4c7a051d95ba620d16b7b141e7d27bc511aa2b1238ca9025791333639",
+        "8e5c12c605dcd02a5e5e0abd9bf64874c5f530f33b14e7ebd6bfea0dfbcb4086"
+    ],
+    "numTransactions": [
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    ],
+    "ledgers": [
+        {
+            "name": "org1",
+            "ledgerStore": "./org1/chains/chains/mychannel",
+            "blockFile": "./org1/chains/chains/mychannel/blockfile_000000",
+            "privateDataStore": "./org1/pvtdataStore"
+        },
+        {
+            "name": "org2",
+            "ledgerStore": "./org2/chains/chains/mychannel",
+            "blockFile": "./org2/chains/chains/mychannel/blockfile_000000",
+            "privateDataStore": "./org2/pvtdataStore"
+        }
+    ]
+}

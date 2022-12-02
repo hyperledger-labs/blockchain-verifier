@@ -12,7 +12,6 @@ import { ResultSet } from "./result-set";
 import { BCVCheckpoint } from "./checkpoint";
 
 import FabricBlock from "./network/fabric-block";
-import FabricQuery from "./network/fabric-query";
 import FabricQuery2 from "./network/fabric-query2";
 
 import GenericBlockChecker from "./check/block-integrity";
@@ -27,7 +26,6 @@ type MultipleLedgerCheckPluginInfo =  { pluginName: string, module: new (provide
 
 const networkPlugins: NetworkPluginInfo[] = [
     { pluginName: "fabric-block", module: FabricBlock },
-    { pluginName: "fabric-query", module: FabricQuery },
     { pluginName: "fabric-query2", module: FabricQuery2 }
 ];
 
