@@ -6,7 +6,6 @@ The goal of this tool is to verify the integrity of blockchain blocks and transa
 
 ## Supported Blockchain Platforms
 
-- Hyperledger Fabric v1.4 (*to be deprecated*)
 - Hyperledger Fabric v2.2, v2.3 & v2.4
 
 ## Prerequisites
@@ -29,17 +28,17 @@ Run with `-h` for the full list of the options.
 
 ### Options
 
-| Option          | Description                                                                                        |
-|-----------------|----------------------------------------------------------------------------------------------------|
-| `-n (plugin)`   | Specify the name of the network plugin to use                                                      |
-| `-c (config)`   | Configuration passed to the network plugin. See the description for the network plugins for detail |
-| `-o (file)`     | Save the result JSON in the specified file                                                         |
-| `-k (checkers)` | Specify the modules to use as application-specific checkers                                        |
-| `-x (checkers)` | Disable the checkers with specified names                                                          |
-| `-s (checkpoint)` | Save the checkpoint into a JSON file after the checks are completed                                  |
-| `-r (checkpoint)` | Resume checks from the checkpoint                                                                    |
-| `-i`            | Skip key-value processing even if a checkpoint is to be saved (i.e. the `-s` option is specified)    |
-| `-e (block)`    | Stop checks at the specified block number                                                          |
+| Option            | Description                                                                                        |
+|-------------------|----------------------------------------------------------------------------------------------------|
+| `-n (plugin)`     | Specify the name of the network plugin to use                                                      |
+| `-c (config)`     | Configuration passed to the network plugin. See the description for the network plugins for detail |
+| `-o (file)`       | Save the result JSON in the specified file                                                         |
+| `-k (checkers)`   | Specify the modules to use as application-specific checkers                                        |
+| `-x (checkers)`   | Disable the checkers with specified names                                                          |
+| `-s (checkpoint)` | Save the checkpoint into a JSON file after the checks are completed                                |
+| `-r (checkpoint)` | Resume checks from the checkpoint                                                                  |
+| `-i`              | Skip key-value processing even if a checkpoint is to be saved (i.e. the `-s` option is specified)  |
+| `-e (block)`      | Stop checks at the specified block number                                                          |
 
 ### Commands
 
@@ -59,9 +58,8 @@ Runs verification against a Hyperledger Fabric ledger file `/tmp/block/blockfile
 
 | Name            | Supported Platform          | Description                                | Config value (`-c` option)             |
 |-----------------|-----------------------------|--------------------------------------------|----------------------------------------|
-| `fabric-block`  | Hyperledger Fabric v1.4/2.x | Verify a ledger file and private DB        | Path to the ledger file or config JSON |
-| `fabric-query`  | Hyperledger Fabric v1.4     | Verify blocks by querying to a peer        | Path to the query config file          |
-| `fabric-query2` | Hyperledger Fabric v2.x     | Verify blocks by querying to a peer (v2.x) | Path to the query config file (v2)     |
+| `fabric-block`  | Hyperledger Fabric v2.x     | Verify a ledger file and private DB        | Path to the ledger file or config JSON |
+| `fabric-query2` | Hyperledger Fabric v2.x     | Verify blocks by querying to a peer        | Path to the query config file          |
 
 ### fabric-block
 
@@ -140,50 +138,6 @@ Example:
 }
 ```
 
-### fabric-query
-
-*To be deprecated*: Since Hyperledger Fabric v1.4 is no longer maintained, the support for v1.4 will be deprecated in a future release of Blockchain Verifier. This plugin will be also removed once the support is deprecated.
-
-This plugin checks blocks by obtaining them using `query` method to a peer.
-
-The configuration value for the plugin should be the file name to the configuration JSON.
-The format for the JSON is as follows:
-
-| Key name                       | Type    | Description                                                   |
-|--------------------------------|---------|---------------------------------------------------------------|
-| `connectionProfile`            | string  | path to the connection profile                                |
-| `useDiscovery`                 | boolean | whether to use the service discovery                          |
-| `client.mspID`                 | string  | MSP ID for the Hyperledger Fabric client                      |
-| `client.peerName`              | string  | peer name to query                                            |
-| `client.channelName`           | string  | channel name                                                  |
-| `client.credentials.useAdmin`  | boolean | whether to use the admin credentials described in the profile |
-| `client.credentials.mutualTLS` | boolean | whether to use mutual TLS                                     |
-| `client.credentials.userName`  | string  | user name (not so meaningful)                                 |
-| `client.credentials.certFile`  | string  | path to signed certificate to use for the client              |
-| `client.credentials.keyFile`   | string  | path to private key to use for the client                     |
-
-Example:
-
-```json
-{
-  "connectionProfile": "profile.yaml",
-  "useDiscovery": true,
-  "client": {
-    "mspID": "Org1MSP",
-    "peerName": "peer0.org1.example.com",
-    "channelName": "mychannel",
-    "credentials": {
-      "useAdmin": false,
-      "mutualTLS": false,
-      "userName": "user",
-      "certFile": "credentials/User1@org1.example.com-cert.pem",
-      "keyFile": "credentials/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk"
-    }
-  }
-}
-
-```
-
 ## Result JSON
 
 The result JSON contains information for each block and transaction, along with
@@ -249,7 +203,7 @@ The results for these checks are all "OK," which means that the integrity of the
 
 When multiple ledgers are specified, Blockchain Verifier checks the hash value of each block in a ledger with the hash values of the block
 in the other ledgers.
-Currently, the "fabric-block" and "fabric-query2" plugins support this feature.
+Currently, both the "fabric-block" and "fabric-query2" plugins support this feature.
 The first ledger in the configuration is considered to be "preferred," and the other ledgers are used only in this check.
 
 ## Platform Checkers
@@ -297,6 +251,10 @@ Please also notice that application checkers will not be able to obtain history 
 - Support for more plugins and platforms
 
 ## Changes
+
+### v0.5.0 (To be released)
+
+- Delete *fabric-query* plugin and eliminate support for Hyperledger Fabric v1.4
 
 ### v0.4.0 (Sep. 9, 2022)
 

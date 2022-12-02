@@ -13,9 +13,8 @@ import FabricBlockPlugin, { FabricBlockSource } from "./fabric-block";
 const testDataPathBase = path.join(__dirname, "..", "..", "test");
 
 const testDataset: { [name: string]: string } = {
-    "asset-transfer-private-data-2.4.6": path.join(testDataPathBase, "asset-transfer-private-data-2.4.6"),
-    "fabcar-1.4.1": path.join(testDataPathBase, "fabcar-1.4.1"),
-    "marbles-private-1.4.1": path.join(testDataPathBase, "marbles-private-1.4.1")
+    "asset-transfer-basic-2.4.7": path.join(testDataPathBase, "asset-transfer-basic-2.4.7"),
+    "asset-transfer-private-data-2.4.7": path.join(testDataPathBase, "asset-transfer-private-data-2.4.7")
 };
 
 describe("FabricBlockSource", () => {

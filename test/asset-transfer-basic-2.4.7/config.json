@@ -1,0 +1,25 @@
+{
+    "blockHeight": 10,
+    "hashes": [
+        "a8c363ad5cff83a41743ccfb8e9c3e48d0cade6bb187b1e29818f7a52ca69d4b",
+        "4d4d654acea3d15ce11388d1409637d2c0e92f46a0c4301830600f01d6440c2c",
+        "f2c9fc8790aa65ddb2e406203bc9d58124b47542fa178a6b66762a0d9842e9f6",
+        "97742f411c050c7e31a6446ac966987d8cd9db6184f57005a519bc11a081cdcc",
+        "519afdedb81f027284424e3e3c0078ab36948a8370fffd8a4645c1dd263bf687",
+        "c1947444f6998cf40585013d78c0312e8e4f60412267c2ab48cc3419cf2cf561",
+        "d246793aac8617e095ecc0fb5ca1f51d47ad7404c328be3ef769542e74f10a9d",
+        "bd5e22dffd7841cea82f7dbe98b666d7759d2213360a101a83a4c9d0b876c565",
+        "c29758264e887a4949b18e93f58d0a63cfbf9d1593e773ae971a47a8d14c7eb3",
+        "1768daca2dbedd4bcdd29a7876128b8f4d1ba0d5f7b456ddf747c2237e6aa642"
+    ],
+    "numTransactions": [
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    ],
+    "ledgers": [
+        {
+            "name": "org1",
+            "ledgerStore": "./chains/chains/mychannel",
+            "blockFile": "./chains/chains/mychannel/blockfile_000000"
+        }
+    ]
+}

@@ -12,39 +12,28 @@ import { FabricFunctionInfo, FabricTransactionType } from "./fabric-data";
 
 const testDataPathBase = path.join(__dirname, "..", "..", "..", "test");
 const testDataset: { [name: string]: string } = {
-    "fabcar-1.4.1": path.join(testDataPathBase, "fabcar-1.4.1"),
-    "marbles-private-1.4.1": path.join(testDataPathBase, "marbles-private-1.4.1")
+    "asset-transfer-basic-2.4.7": path.join(testDataPathBase, "asset-transfer-basic-2.4.7")
 };
 
 describe("Fabric Data", () => {
-    let fabCarConfig: any;
-    let fabCarBlockSource: FabricBlockSource;
-    let marblesConfig: any;
-    let marblesBlockSource: FabricBlockSource;
+    let assetTransferConfig: any;
+    let assetTransferBlockSource: FabricBlockSource;
 
     beforeAll(async () => {
-        const fabCarPath = testDataset["fabcar-1.4.1"];
-        fabCarConfig = require(path.join(fabCarPath, "config.json"));
-        fabCarBlockSource = await FabricBlockSource.createFromConfig({
-            ledgerStore: path.join(fabCarPath, fabCarConfig.ledgers[0].ledgerStore)
-        });
-
-        const marblesPath = testDataset["marbles-private-1.4.1"];
-        marblesConfig = require(path.join(marblesPath, "config.json"));
-        marblesBlockSource = await FabricBlockSource.createFromConfig({
-            ledgerStore: path.join(marblesPath, marblesConfig.ledgers[0].ledgerStore),
-            privateDataStore: path.join(marblesPath, marblesConfig.ledgers[0].privateDataStore)
+        const assetTransferPath = testDataset["asset-transfer-basic-2.4.7"];
+        assetTransferConfig = require(path.join(assetTransferPath, "config.json"));
+        assetTransferBlockSource = await FabricBlockSource.createFromConfig({
+            ledgerStore: path.join(assetTransferPath, assetTransferConfig.ledgers[0].ledgerStore)
         });
     });
-    afterAll(async () => {
-        await marblesBlockSource.closePrivateDB();
-    });
 
-    test("Simple Transaction Block (fabcar:4)", async () => {
-        const block = await fabCarBlockSource.getBlock(4);
-        expect(block.getBlockNumber()).toBe(4);
-        expect(block.getHashValue().toString("hex")).toBe(fabCarConfig.hashes[4]);
-        expect(block.calcHashValue(HashValueType.HASH_FOR_SELF).toString("hex")).toBe(fabCarConfig.hashes[4]);
+    test("Simple Transaction Block (basic:6)", async () => {
+        const blockNumber = 6;
+
+        const block = await assetTransferBlockSource.getBlock(blockNumber);
+        expect(block.getBlockNumber()).toBe(blockNumber);
+        expect(block.getHashValue().toString("hex")).toBe(assetTransferConfig.hashes[blockNumber]);
+        expect(block.calcHashValue(HashValueType.HASH_FOR_SELF).toString("hex")).toBe(assetTransferConfig.hashes[blockNumber]);
 
         const transactions = block.getTransactions();
         expect(transactions.length).toBe(1);
@@ -58,33 +47,37 @@ describe("Fabric Data", () => {
         expect(actions).toHaveLength(1);
         const funcInfo = actions[0].getFunction() as FabricFunctionInfo;
         expect(funcInfo).not.toBeNull();
-        expect(funcInfo.ccName).toBe("fabcar");
-        expect(funcInfo.funcName.toString()).toBe("initLedger");
+        expect(funcInfo.ccName).toBe("basic");
+        expect(funcInfo.funcName.toString()).toBe("InitLedger");
         expect(funcInfo.args).toHaveLength(0);
 
         const set = tx.getWriteSet();
-        expect(set.length).toBe(10);
-        expect(set[0].key.toString()).toBe("fabcar\0CAR0");
-        expect(set[9].key.toString()).toBe("fabcar\0CAR9");
+        expect(set.length).toBe(6);
+        expect(set[0].key.toString()).toBe("basic\0asset1");
+        expect(set[5].key.toString()).toBe("basic\0asset6");
 
         expect(set[3].isDelete).toBeFalsy();
 
-        const pair = set[3] as KeyValuePairWrite;
+        const pair = set[2] as KeyValuePairWrite;
         expect(JSON.parse(pair.value.toString())).toEqual({
-            docType: "car", make: "Volkswagen", model: "Passat", color: "yellow", owner: "Max"
+            docType: "asset", ID: "asset3", Color: "green", Size: 10, Owner: "Jin Soo", AppraisedValue: 500
         });
-        expect(set[5].version.toString()).toBe("4-0");
+        expect(set[5].version.toString()).toBe("6-0");
 
         const readSet = tx.getReadSet();
         expect(readSet.length).toBe(1);
-        expect(readSet[0].key.toString()).toBe("lscc\0fabcar");
-        expect(readSet[0].version.toString()).toBe("3-0");
+        expect(readSet[0].key.toString()).toBe("_lifecycle\0namespaces/fields/basic/Sequence");
+        expect(readSet[0].version.toString()).toBe("5-0");
 
         expect(() => block.getConfigTx()).toThrowError();
     });
 
-    test("Simple Transaction Block with nontrivial readset (fabcar:7)", async () => {
-        const block = await fabCarBlockSource.getBlock(7);
+    test("Simple Transaction Block with nontrivial readset (basic:8)", async () => {
+        const blockNumber = 8;
+
+        const block = await assetTransferBlockSource.getBlock(blockNumber);
+        expect(block.getBlockNumber()).toBe(blockNumber);
+
         const transactions = block.getTransactions();
         expect(transactions.length).toBe(1);
         const tx = transactions[0];
@@ -93,39 +86,28 @@ describe("Fabric Data", () => {
         expect(actions).toHaveLength(1);
         const funcInfo = actions[0].getFunction() as FabricFunctionInfo;
         expect(funcInfo).not.toBeNull();
-        expect(funcInfo.ccName).toBe("fabcar");
-        expect(funcInfo.funcName.toString()).toBe("changeCarOwner");
-        expect(funcInfo.args).toHaveLength(2);
-        expect(funcInfo.args[0].toString()).toBe("CAR0");
+        expect(funcInfo.ccName).toBe("basic");
+        expect(funcInfo.funcName.toString()).toBe("UpdateAsset");
+        expect(funcInfo.args).toHaveLength(5);
+        expect(funcInfo.args[0].toString()).toBe("asset1");
+        expect(funcInfo.args[3].toString()).toBe("Tomoko");
 
         const readSet = tx.getReadSet();
         expect(readSet.length).toBe(2);
-        expect(readSet[0].key.toString()).toBe("fabcar\0CAR0");
-        expect(readSet[0].version.toString()).toBe("4-0"); // written by initLedger (Block 4, Tx 0)
+        expect(readSet[1].key.toString()).toBe("basic\0asset1");
+        expect(readSet[1].version.toString()).toBe("6-0"); // written by InitLedger (Block 6, Tx 0)
 
         const writeSet = tx.getWriteSet();
-        expect(writeSet[0].key.toString()).toBe("fabcar\0CAR0");
+        expect(writeSet.length).toBe(1);
+        expect(writeSet[0].key.toString()).toBe("basic\0asset1");
         expect(writeSet[0].isDelete).toBeFalsy();
         expect(JSON.parse((writeSet[0] as KeyValuePairWrite).value.toString())).toEqual({
-            docType: "car", make: "Toyota", model: "Prius", color: "blue", owner: "Ai"
+            ID: "asset1", Color: "blue", Size: 5, Owner: "Tomoko", AppraisedValue: 350
         });
     });
 
-    test("Multiple Transactions Block (marbles:4)", async () => {
-        const block = await marblesBlockSource.getBlock(4);
-        expect(block.getBlockNumber()).toBe(4);
-
-        const transactions = block.getTransactions();
-        expect(transactions.length).toBe(3);
-
-        const set = transactions[2].getWriteSet();
-        expect(set.length).toBe(0);
-
-        expect(transactions[1].validity).toBeTruthy();
-    });
-
     test("Config Block", async () => {
-        const block = await fabCarBlockSource.getBlock(0);
+        const block = await assetTransferBlockSource.getBlock(0);
         const transactions = block.getTransactions();
         expect(transactions.length).toBe(1);
         const configTx = block.getConfigTx();
@@ -139,15 +121,5 @@ describe("Fabric Data", () => {
         expect(info.applicationMSPs[1].name).toBe("Org2MSP");
         expect(info.ordererMSPs).toHaveLength(1);
         expect(info.ordererMSPs[0].name).toBe("OrdererMSP");
-
-        // Config Update (but in a block, it is config tx)
-        const blockUpdate = await marblesBlockSource.getBlock(2);
-        const configTx2 = blockUpdate.getConfigTx();
-        expect(configTx2.getTransactionType()).toBe(FabricTransactionType.CONFIG);
-
-        const info2 = blockUpdate.getConfigTxInfo();
-        expect(info2.blockNumber).toBe(2);
-        expect(info2.transactionId).toBe(configTx2.getTransactionID());
-        expect(info2.applicationMSPs).toHaveLength(2);
     });
 });

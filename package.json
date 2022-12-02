@@ -18,7 +18,6 @@
   "author": "Taku Shimosawa <taku.shimosawa.uf@hitachi.com>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/asn1js": "^3.0.6",
     "@types/jest": "^29.2.3",
     "@types/node": "^18.11.9",
     "@types/pem": "^1.9.6",
@@ -33,15 +32,13 @@
     "asn1js": "^3.0.5",
     "commander": "^9.4.1",
     "fabric-ca-client": "^2.2.15",
-    "fabric-client": "^1.4.20",
     "fabric-common": "^2.2.15",
     "fabric-protos": "^2.2.15",
     "level": "^8.0.0",
-    "pem": "^1.14.6",
-    "protobufjs": "^7.1.2"
+    "pem": "^1.14.6"
   },
   "engines": {
-    "node": "^10.15 || ^12.15 || >= 14.0.0"
+    "node": ">=10.13.0"
   },
   "homepage": "https://github.com/hyperledger-labs/blockchain-verifier"
 }
