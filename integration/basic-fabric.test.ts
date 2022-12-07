@@ -152,7 +152,7 @@ async function startNetworkV22(version: string) {
                 COMPOSE_PROJECT_NAME: "fabric"
             }
         });
-        execFileSync(helperScriptPath("fabcar.sh"), [], execOptions);
+        execFileSync(helperScriptPath("basic.sh"), [], execOptions);
         execFileSync(helperScriptPath("copy-files.sh"), [], execOptions);
     }
 
@@ -170,7 +170,7 @@ async function startNetworkV24(version: string) {
         execFileSync("npm", ["run", "build"], execOptions);
 
         execFileSync(helperScriptPath("prepare.sh"), versionCombinations[version], execOptions);
-        execFileSync(helperScriptPath("fabcar.sh"), [], execOptions);
+        execFileSync(helperScriptPath("basic.sh"), [], execOptions);
         execFileSync(helperScriptPath("copy-files.sh"), [], execOptions);
     }
 
@@ -386,12 +386,12 @@ describe.each<TestConfig>([
 
         expect(allCount.total).toBeGreaterThan(0);
         expect(allCount.failed).toBe(0);
-        // Should check only blocks #6 and #7
-        expect(results.blocks).toHaveLength(2);
+        // Should check only blocks #6 through #9
+        expect(results.blocks).toHaveLength(4);
 
         const checkpoint = JSON.parse(fs.readFileSync(newCheckpointJSON).toString("utf-8"));
-        expect(checkpoint.lastBlock).toBe(7);
-        expect(checkpoint.stateInformation).toHaveLength(17);
+        expect(checkpoint.lastBlock).toBe(9);
+        expect(checkpoint.stateInformation).toHaveLength(12);
     });
 
     test("fabric-query2 checks one block successfully by resuming from checkpoint at block #5 with '-b 1' option", async () => {
@@ -459,11 +459,11 @@ describe.each<TestConfig>([
 
         expect(allCount.total).toBeGreaterThan(0);
         expect(allCount.failed).toBe(0);
-        // Should check only the block #6 and 7
-        expect(results.blocks).toHaveLength(2);
+        // Should check only the block #6 through #9
+        expect(results.blocks).toHaveLength(4);
 
         const checkpoint = JSON.parse(fs.readFileSync(newCheckpointJSON).toString("utf-8"));
-        expect(checkpoint.lastBlock).toBe(7);
+        expect(checkpoint.lastBlock).toBe(9);
     });
 
     test("fabric-query2 runs successfully with saving checkpoint up to block #6 w/o state information", async () => {
@@ -531,11 +531,11 @@ describe.each<TestConfig>([
 
         expect(allCount.total).toBeGreaterThan(0);
         expect(allCount.failed).toBe(0);
-        // Should check only block #7
-        expect(results.blocks).toHaveLength(1);
+        // Should check blocks #7 through #9
+        expect(results.blocks).toHaveLength(3);
 
         const checkpoint = JSON.parse(fs.readFileSync(newCheckpointJSON).toString("utf-8"));
-        expect(checkpoint.lastBlock).toBe(7);
+        expect(checkpoint.lastBlock).toBe(9);
         expect(checkpoint).not.toHaveProperty("stateInformation");
     });
 
