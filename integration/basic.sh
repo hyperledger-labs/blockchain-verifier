@@ -10,13 +10,11 @@ set -e
 
 # Initialize CC
 cd ${SAMPLES}/test-network
-./network.sh deployCC -ccn fabcar -ccv 1 -cci initLedger -ccl go -ccp ../chaincode/fabcar/go
+./network.sh deployCC -ccn basic -ccl go -ccp ../asset-transfer-basic/chaincode-go
 
 # Run transactions
-cd ${SAMPLES}/fabcar/javascript
+cd ${SAMPLES}/asset-transfer-basic/application-javascript
 npm install
 rm -rf wallet
 
-node enrollAdmin.js
-node registerUser.js
-node invoke.js
+node app.js
