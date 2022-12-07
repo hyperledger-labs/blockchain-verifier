@@ -14,7 +14,7 @@ if [ $# -lt 2 ]; then
 fi
 
 cd ${CURDIR}
-curl -sSL https://bit.ly/2ysbOFE | bash -s -- $1 $2
+curl -sSL https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh | bash -s -- -f $1 -c $2
 
 cd ${SAMPLES}/test-network
 
