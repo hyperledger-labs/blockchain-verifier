@@ -1,0 +1,17 @@
+name: "npm audit check"
+
+on:
+  schedule:
+    - cron: "10 17 * * 0"
+
+jobs:
+  npm-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+      - run: npm install
+      - run: npm audit --audit-level high
