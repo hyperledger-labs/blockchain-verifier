@@ -40,7 +40,8 @@ const execOptions: ExecFileSyncOptionsWithStringEncoding = {
 };
 const versionCombinations: {[version: string]: string[]} = {
     "2.2": ["2.2.9", "1.5.5"],
-    "2.4": ["2.4.7", "1.5.5"]
+    "2.4": ["2.4.7", "1.5.5"],
+    "2.5": ["2.5.0-beta", "1.5.5"]
 };
 
 const FABRIC_LEDGER_PATH = ["ledgersData", "chains", "chains"];
@@ -184,7 +185,8 @@ type TestConfig = {
 
 describe.each<TestConfig>([
     { version: "2.2", startNetwork: startNetworkV22 },
-    { version: "2.4", startNetwork: startNetworkV24 }
+    { version: "2.4", startNetwork: startNetworkV24 },
+    { version: "2.5", startNetwork: startNetworkV24 }
 ])("Hyperledger Fabric $version", ({version, startNetwork}) => {
 
     beforeAll(async () => {
