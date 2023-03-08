@@ -7,10 +7,11 @@ The goal of this tool is to verify the integrity of blockchain blocks and transa
 ## Supported Blockchain Platforms
 
 - Hyperledger Fabric v2.2 & v2.4
+- Hyperledger Fabric v2.5 (experimental, only tested with beta)
 
 ## Prerequisites
 
-- Node.js >= v10.15
+- Node.js >= v16
 
 ## Install
 
@@ -256,6 +257,7 @@ Please also notice that application checkers will not be able to obtain history 
 
 - Delete *fabric-query* plugin and eliminate support for Hyperledger Fabric v1.4
 - Drop support for Hyperledger Fabric v2.3
+- Add support for Hyperledger Fabric v2.5 (LTS)
 
 ### v0.4.0 (Sep. 9, 2022)
 
