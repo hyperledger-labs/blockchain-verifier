@@ -40,7 +40,7 @@ const execOptions: ExecFileSyncOptionsWithStringEncoding = {
 };
 const versionCombinations: {[version: string]: string[]} = {
     "2.2": ["2.2.9", "1.5.5"],
-    "2.4": ["2.4.7", "1.5.5"],
+    "2.4": ["2.4.9", "1.5.5"],
     "2.5": ["2.5.0-beta", "1.5.5"]
 };
 
